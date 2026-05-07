@@ -12,6 +12,7 @@ namespace NeuroBridgeBackend.Services
             services.AddScoped<IQuizService, QuizService>();
             services.AddScoped<IQuestionService, QuestionService>();
             services.AddScoped<ITestEntityService, TestEntityService>();
+            services.AddScoped<IFileService, FileService>();
 
             return services;
         }
