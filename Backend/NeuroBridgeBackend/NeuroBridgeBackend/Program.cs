@@ -34,6 +34,12 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+// Add SignalR
+builder.Services.AddSignalR();
+
+// Add hosted services
+builder.Services.AddHostedService<NeuroBridgeBackend.BackgroundServices.ChatCleanupService>();
+
 var app = builder.Build();
 
 // Create uploads directory
@@ -55,5 +61,8 @@ app.UseStaticFiles();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Map SignalR hub
+app.MapHub<NeuroBridgeBackend.Hubs.ChatHub>("/chatHub");
 
 app.Run();

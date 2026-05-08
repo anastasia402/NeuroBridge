@@ -14,6 +14,8 @@ namespace NeuroBridgeBackend.Services
             services.AddScoped<ITestEntityService, TestEntityService>();
             services.AddScoped<IFileService, FileService>();
             services.AddScoped<IAIService, AIService>();
+            services.AddScoped<IChatMessageService, ChatMessageService>();
+            services.AddScoped<IMentoringSessionService, MentoringSessionService>();
 
             return services;
         }

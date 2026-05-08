@@ -15,6 +15,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<Material> Materials { get; set; } = null!;
     public DbSet<Quiz> Quizzes { get; set; } = null!;
     public DbSet<Question> Questions { get; set; } = null!;
+    public DbSet<MentoringSession> MentoringSessions { get; set; } = null!;
+    public DbSet<ChatMessage> ChatMessages { get; set; } = null!;
+    public DbSet<MentorFeedback> MentorFeedbacks { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -90,6 +93,72 @@ public class ApplicationDbContext : DbContext
                 .WithMany(q => q.Questions)
                 .HasForeignKey(e => e.QuizId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<MentoringSession>(entity =>
+        {
+            entity.Property(e => e.Id)
+                .ValueGeneratedNever(); // UUID is generated in code
+
+            entity.Property(e => e.Status)
+                .HasConversion<string>()
+                .HasMaxLength(15)
+                .HasDefaultValue(MentoringSessionStatus.PENDING)
+                .IsRequired();
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasOne(e => e.Junior)
+                .WithMany()
+                .HasForeignKey(e => e.JuniorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Mentor)
+                .WithMany()
+                .HasForeignKey(e => e.MentorId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ChatMessage>(entity =>
+        {
+            entity.Property(e => e.MessageType)
+                .HasConversion<string>()
+                .HasMaxLength(10)
+                .HasDefaultValue(ChatMessageType.TEXT)
+                .IsRequired();
+
+            entity.Property(e => e.SentAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasOne(e => e.Session)
+                .WithMany(s => s.ChatMessages)
+                .HasForeignKey(e => e.SessionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Sender)
+                .WithMany()
+                .HasForeignKey(e => e.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<MentorFeedback>(entity =>
+        {
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            // CHECK constraint for rating (1-5)
+            entity.ToTable(t => t.HasCheckConstraint("CK_MentorFeedback_Rating", "Rating >= 1 AND Rating <= 5"));
+
+            entity.HasOne(e => e.Session)
+                .WithOne(s => s.Feedback)
+                .HasForeignKey<MentorFeedback>(e => e.SessionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Mentor)
+                .WithMany()
+                .HasForeignKey(e => e.MentorId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         base.OnModelCreating(modelBuilder);
