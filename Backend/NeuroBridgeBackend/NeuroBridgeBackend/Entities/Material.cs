@@ -21,6 +21,9 @@ namespace NeuroBridgeBackend.Entities
 
         public User? Uploader { get; set; }
 
+        [Column(TypeName = "nvarchar(max)")]
+        public string? Summary { get; set; }
+
         public DateTime CreatedAt { get; set; }
     }
 }

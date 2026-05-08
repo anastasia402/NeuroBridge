@@ -15,6 +15,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddRepositories();
 builder.Services.AddServices();
 
+// Add HttpClient factory
+builder.Services.AddHttpClient();
+
 // Configure file upload limits (20MB)
 builder.Services.Configure<IISServerOptions>(options =>
 {
