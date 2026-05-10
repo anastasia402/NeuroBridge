@@ -103,51 +103,68 @@ const Login = () => {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h1>Conectare</h1>
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="your@email.com"
-              className={errors.email ? 'input-error' : ''}
-            />
-            {errors.email && <span className="error-message">{errors.email}</span>}
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center px-6 py-12">
+      <div className="max-w-md mx-auto w-full">
+        {/* Logo Vibe */}
+        <div className="flex justify-center mb-10">
+          <div className="bg-gray-900 p-3 rounded-2xl text-white shadow-lg shadow-gray-200">
+            <span className="text-2xl">⚡</span>
+          </div>
+        </div>
+
+        {/* Cardul de Login */}
+        <div className="bg-white border border-gray-100 p-10 rounded-[3rem] shadow-sm">
+          <div className="mb-8 text-center">
+            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Welcome back</h1>
+            <p className="text-gray-500 mt-2 font-medium italic text-sm">Ready to continue your journey?</p>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="password">Parolă</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Minim 8 caractere"
-              className={errors.password ? 'input-error' : ''}
-            />
-            {errors.password && <span className="error-message">{errors.password}</span>}
-          </div>
-
-          {errors.server && (
-            <div className="error-alert">
-              {errors.server}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-4 mb-2 block">
+                Email Address
+              </label>
+              <input
+                type="email"
+                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all"
+                placeholder="alex@example.com"
+                required
+              />
             </div>
-          )}
 
-          <button type="submit" disabled={isLoading} className="submit-btn">
-            {isLoading ? 'Se conectează...' : 'Conectare'}
-          </button>
-        </form>
+            <div>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-4 mb-2 block">
+                Password
+              </label>
+              <input
+                type="password"
+                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all"
+                placeholder="••••••••"
+                required
+              />
+            </div>
 
-        <p className="auth-link">
-          Nu ai cont? <Link to="/register">Înregistrează-te</Link>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-gray-900 text-white hover:bg-gray-800 py-4 rounded-2xl font-bold shadow-md transition-all active:scale-[0.98] disabled:opacity-70 mt-4"
+            >
+              {isLoading ? 'Connecting...' : 'Sign In'}
+            </button>
+          </form>
+
+          <div className="mt-8 text-center">
+            <p className="text-sm text-gray-400 font-medium">
+              New here?{' '}
+              <Link to="/register" className="text-gray-900 font-bold hover:underline ml-1">
+                Create an account
+              </Link>
+            </p>
+          </div>
+        </div>
+
+        <p className="text-center mt-10 text-sm text-gray-300 italic font-medium">
+          "Small steps lead to big bridges."
         </p>
       </div>
     </div>
