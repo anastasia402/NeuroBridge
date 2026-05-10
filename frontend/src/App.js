@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
+
 import AdminDashboard from './pages/admin/AdminDashboard';
 import QuizzesReview from './pages/admin/QuizzesReview';
 
@@ -35,6 +38,10 @@ export default function App() {
       <Routes>
         {/* Default Redirect */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+        {/* --- AUTH ROUTES --- */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
         {/* --- JUNIOR ROUTES --- */}
         {/* Pass the handleOpenChat function so buttons inside these pages work */}
