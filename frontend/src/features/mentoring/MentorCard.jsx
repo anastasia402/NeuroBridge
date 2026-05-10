@@ -1,34 +1,36 @@
 import React from 'react';
 import Button from '../../components/common/Button';
-import Badge from '../../components/common/Badge';
 
-export default function MentorCard({ name, subjects, initials, description, status, languages, availability }) {
+export default function MentorCard({ name, initials, subjects, status, description, languages, availability, onChat }) {
   return (
-    <div className="bg-white rounded-3xl p-6 mb-4 shadow-sm border border-gray-100">
+    <div className="bg-white border border-gray-100 p-5 rounded-[2rem] shadow-sm mb-4">
       <div className="flex justify-between items-start mb-4">
-        <div className="flex items-center space-x-4">
-          <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 font-bold text-lg">
+        <div className="flex space-x-3">
+          <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center font-bold text-lg">
             {initials}
           </div>
           <div>
-            <h3 className="font-bold text-gray-900 text-lg">{name}</h3>
-            <p className="text-xs font-medium text-gray-500 mt-0.5">{subjects}</p>
+            <h3 className="font-bold text-gray-900">{name}</h3>
+            <p className="text-[10px] text-gray-500 font-bold uppercase">{subjects}</p>
           </div>
         </div>
-        <Badge text={status} variant={status === 'ACTIVE' ? 'success' : 'default'} />
+        <span className="bg-green-50 text-green-600 text-[9px] font-bold px-2 py-1 rounded-lg">
+          {status === 'ACTIVE' ? availability : status}
+        </span>
       </div>
       
-      <p className="text-sm text-gray-600 italic mb-4 leading-relaxed">"{description}"</p>
-      
-      <div className="flex justify-between items-center mb-5 text-xs text-gray-500 font-medium">
-        <span>🗣 {languages}</span>
-        <span>⏱ {availability}</span>
-      </div>
-      
-      <div className="flex space-x-3">
-        <Button variant="primary" className="flex-1 py-2.5">Chat Now</Button>
-        <Button variant="secondary" className="flex-1 py-2.5">Request</Button>
-      </div>
+      <p className="text-xs text-gray-600 mb-4 leading-relaxed line-clamp-2">
+        {description}
+      </p>
+
+      {/* 2. Make sure onClick={onChat} is on this button! */}
+      <Button 
+        onClick={onChat} 
+        variant="primary" 
+        className="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-xl py-3 text-xs"
+      >
+        Chat Now
+      </Button>
     </div>
   );
 }

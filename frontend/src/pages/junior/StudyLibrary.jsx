@@ -10,7 +10,6 @@ export default function StudyLibrary() {
       <div className="max-w-md mx-auto pb-24">
         <h1 className="text-3xl font-bold text-gray-900 mb-6 tracking-tight">Study Library</h1>
 
-        {/* Search & Filters */}
         <div className="mb-8">
           <div className="relative mb-4">
             <span className="absolute left-4 top-3.5 text-gray-400">🔍</span>
@@ -34,7 +33,6 @@ export default function StudyLibrary() {
           </div>
         </div>
 
-        {/* AI Suggestions */}
         <div className="flex justify-between items-end mb-4">
           <h2 className="text-lg font-bold text-gray-900">Suggestions</h2>
           <button className="text-xs font-bold text-gray-400 hover:text-gray-900">View All</button>
@@ -51,7 +49,6 @@ export default function StudyLibrary() {
           reason="Matches your interest in Neuroscience, frequently appears in upcoming mock tests."
         />
 
-        {/* Standard Materials */}
         <h2 className="text-lg font-bold text-gray-900 mb-4 mt-8">Study Materials</h2>
         <MaterialCard 
           title="Neuroplasticity Basics"

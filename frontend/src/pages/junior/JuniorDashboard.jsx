@@ -1,104 +1,120 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PageWrapper from '../../components/layout/PageWrapper';
 import Button from '../../components/common/Button';
 import ProgressBar from '../../components/common/ProgressBar';
+import QuizSelectionModal from '../../features/quizzes/QuizSelectionModal';
 
 export default function JuniorDashboard() {
+  const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
+
+  const handleStartQuiz = (type) => {
+    console.log("Starting quiz of type:", type);
+    setIsQuizModalOpen(false);
+  };
+
   return (
-    <PageWrapper role="JUNIOR" userName="Alex" activePath="/dashboard">
-      <div className="max-w-md mx-auto pb-24">
-        
-        {/* 1. Header: Greeting + Rank & Points with Progress Animation */}
-        <div className="mb-8 flex justify-between items-end">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Hi, Alex</h1>
-            <p className="text-gray-500 text-sm mt-1">Level 12 Learner</p>
-          </div>
-          <div className="text-right">
-            <p className="text-xs font-bold text-blue-600 mb-1">1,240 / 2,000 EXP</p>
-            <ProgressBar progress={62} colorClass="bg-blue-500" className="w-24 h-2" />
-          </div>
-        </div>
-
-        {/* 2. Quick Mentoring Button */}
-        <div className="bg-gray-900 rounded-3xl p-5 mb-8 text-white flex justify-between items-center shadow-md hover:shadow-lg transition-shadow">
-          <div>
-            <h3 className="font-bold text-lg">Stuck on a concept?</h3>
-            <p className="text-sm text-gray-300">Connect with an expert in minutes.</p>
-          </div>
-          <Button variant="primary" className="bg-white text-gray-900 hover:bg-gray-100 px-6">
-            Ask Mentor
-          </Button>
-        </div>
-
-        {/* 3. Today's Quizzes (Spaced Repetition Due) */}
-        <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Today's Quizzes</h2>
-        <div className="grid grid-cols-2 gap-4 mb-8">
-          <div className="bg-orange-50 border border-orange-100 p-4 rounded-3xl">
-            <div className="flex justify-between items-start mb-2">
-              <span className="text-2xl">⚡</span>
-              <span className="bg-white text-orange-600 text-[10px] font-bold px-2 py-1 rounded-md shadow-sm">DUE</span>
-            </div>
-            <h3 className="font-bold text-gray-900 text-sm mb-1">Cognitive Load</h3>
-            <p className="text-xs text-gray-500 mb-3">Memory decay warning</p>
-            <Button variant="accent" className="w-full bg-orange-200 text-orange-900 py-2 text-xs">Take Quiz</Button>
-          </div>
+    <>
+      <PageWrapper role="JUNIOR" userName="Alex" activePath="/dashboard">
+        <div className="max-w-md mx-auto pb-8">
           
-          <div className="bg-blue-50 border border-blue-100 p-4 rounded-3xl">
-            <div className="flex justify-between items-start mb-2">
-              <span className="text-2xl">🧠</span>
+          <div className="flex justify-between items-center mb-8">
+            <div className="bg-gray-900 p-2 rounded-xl text-white shadow-sm">
+              <span className="text-xl">⚡</span>
             </div>
-            <h3 className="font-bold text-gray-900 text-sm mb-1">Neural Pathways</h3>
-            <p className="text-xs text-gray-500 mb-3">Optimal review time</p>
-            <Button variant="accent" className="w-full bg-blue-200 text-blue-900 py-2 text-xs">Take Quiz</Button>
+            <div className="flex space-x-4 text-gray-400">
+              <button className="text-xl hover:text-gray-900 transition-colors">❔</button>
+              <button className="text-xl hover:text-gray-900 transition-colors">⚙️</button>
+            </div>
           </div>
-        </div>
 
-        {/* 4. Assigned Materials with Retention Strength (Memory Health Bar) */}
-        <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Assigned Materials</h2>
-        <div className="space-y-4">
-          
-          {/* Material 1 */}
-          <div className="bg-white border border-gray-100 shadow-sm p-5 rounded-3xl">
-            <h3 className="font-bold text-gray-900 text-lg mb-1">Spaced Repetition Algorithms</h3>
-            <p className="text-xs text-gray-500 mb-4">Read 2 days ago</p>
+          <div className="mb-10">
+            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Good morning, Alex</h1>
+            <p className="text-gray-500 mt-1 font-medium italic">Ready to cross today's learning bridge?</p>
+          </div>
+
+          <div className="mb-10 bg-white border border-gray-100 p-6 rounded-[2rem] shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Current Rank</p>
+              <h3 className="text-lg font-bold text-gray-900">Level 12 Learner</h3>
+            </div>
+            <div className="text-right flex flex-col items-end">
+              <span className="text-[10px] font-bold text-blue-600 mb-2">1,240 / 2,000 EXP</span>
+              <ProgressBar progress={62} colorClass="bg-blue-500" className="w-24 h-1.5" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 mb-10">
+            <div className="bg-blue-50/50 p-6 rounded-[2.5rem] hover:bg-blue-100 transition-all cursor-pointer border border-transparent hover:border-blue-200">
+              <span className="bg-white w-10 h-10 rounded-xl flex items-center justify-center mb-4 shadow-sm border border-blue-50 text-lg">📖</span>
+              <h3 className="font-bold text-gray-900 text-sm mb-1">Study Materials</h3>
+              <p className="text-[10px] text-gray-500 leading-relaxed">Dive into your saved lessons and library</p>
+            </div>
             
-            {/* Retention Strength Indicator */}
-            <div className="mb-4 bg-gray-50 p-3 rounded-2xl">
-              <div className="flex justify-between text-xs font-bold mb-1.5">
-                <span className="text-gray-600">Retention Strength</span>
-                <span className="text-orange-600">45% (Critical)</span>
-              </div>
-              <ProgressBar progress={45} colorClass="bg-orange-400" />
+            <div 
+              onClick={() => setIsQuizModalOpen(true)}
+              className="bg-gray-50/50 p-6 rounded-[2.5rem] hover:bg-gray-100 transition-all cursor-pointer border border-transparent hover:border-gray-200"
+            >
+              <span className="bg-white w-10 h-10 rounded-xl flex items-center justify-center mb-4 shadow-sm border border-gray-50 text-lg">⚡</span>
+              <h3 className="font-bold text-gray-900 text-sm mb-1">Quick Quiz</h3>
+              <p className="text-[10px] text-gray-500 leading-relaxed">Test your knowledge with AI challenges</p>
             </div>
 
-            <div className="flex space-x-3">
-              <Button variant="secondary" className="flex-1 py-2 text-xs">Reread</Button>
-              <Button variant="primary" className="flex-1 py-2 text-xs">Test Memory</Button>
+            <div className="bg-gray-50/50 p-6 rounded-[2.5rem] hover:bg-gray-100 transition-all cursor-pointer border border-transparent hover:border-gray-200">
+              <span className="bg-white w-10 h-10 rounded-xl flex items-center justify-center mb-4 shadow-sm border border-gray-50 text-lg">👥</span>
+              <h3 className="font-bold text-gray-900 text-sm mb-1">Connect Mentor</h3>
+              <p className="text-[10px] text-gray-500 leading-relaxed">Get personalized help from experts</p>
+            </div>
+
+            <div className="bg-blue-50/50 p-6 rounded-[2.5rem] hover:bg-blue-100 transition-all cursor-pointer border border-transparent hover:border-blue-200">
+              <span className="bg-white w-10 h-10 rounded-xl flex items-center justify-center mb-4 shadow-sm border border-blue-50 text-lg">✨</span>
+              <h3 className="font-bold text-gray-900 text-sm mb-1">Suggestions</h3>
+              <p className="text-[10px] text-gray-500 leading-relaxed">Personalized paths based on your stats</p>
             </div>
           </div>
 
-          {/* Material 2 */}
-          <div className="bg-white border border-gray-100 shadow-sm p-5 rounded-3xl">
-            <h3 className="font-bold text-gray-900 text-lg mb-1">Synaptic Pruning</h3>
-            <p className="text-xs text-gray-500 mb-4">Read 2 hours ago</p>
-            
-            {/* Retention Strength Indicator */}
-            <div className="mb-4 bg-gray-50 p-3 rounded-2xl">
-              <div className="flex justify-between text-xs font-bold mb-1.5">
-                <span className="text-gray-600">Retention Strength</span>
-                <span className="text-green-600">92% (Strong)</span>
-              </div>
-              <ProgressBar progress={92} colorClass="bg-green-500" />
+          <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-4 ml-2">Today's Quizzes</h2>
+          <div className="bg-orange-50/50 border border-orange-100 p-7 rounded-[2.5rem] mb-10">
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="font-bold text-gray-900 text-lg">Cognitive Load Theory</h3>
+              <span className="bg-orange-200 text-orange-900 text-[10px] font-bold px-2.5 py-1 rounded-lg shadow-sm">DUE NOW</span>
             </div>
+            <p className="text-xs text-gray-600 mb-6 italic leading-relaxed">"Reviewing this now will bridge your memory gaps from yesterday."</p>
+            <Button 
+              onClick={() => setIsQuizModalOpen(true)}
+              className="w-full bg-orange-100 text-orange-800 hover:bg-orange-200 py-4 rounded-2xl font-bold shadow-sm"
+            >
+              Start AI Quiz
+            </Button>
+          </div>
 
-            <div className="flex space-x-3">
-              <Button variant="secondary" className="flex-1 py-2 text-xs">Reread</Button>
+          <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-4 ml-2">Insight of the Day</h2>
+          <div className="bg-orange-50 border border-orange-100/50 p-8 rounded-[2.5rem] mb-10 relative overflow-hidden">
+            <div className="relative z-10">
+              <span className="bg-white text-[10px] font-bold px-3 py-1.5 rounded-xl text-gray-600 mb-5 inline-block shadow-sm">Did you know?</span>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4 tracking-tight leading-tight">The Power of Spaced Repetition</h3>
+              <p className="text-sm text-gray-700 mb-6 leading-relaxed">
+                Reviewing information right before you're about to forget it strengthens your neural pathways by 300%. NeuroBridge uses this to help you learn faster.
+              </p>
+              <button className="text-sm font-bold text-gray-900 flex items-center hover:translate-x-1 transition-transform group">
+                Explore memory tips <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+              </button>
             </div>
+            <div className="absolute top-0 right-0 -mr-12 -mt-12 w-48 h-48 bg-orange-200/20 rounded-full blur-3xl"></div>
+          </div>
+
+          <div className="text-center py-8">
+            <div className="h-[1px] w-12 bg-gray-100 mx-auto mb-6"></div>
+            <p className="text-sm text-gray-300 italic font-medium">"Small steps lead to big bridges."</p>
           </div>
 
         </div>
-      </div>
-    </PageWrapper>
+      </PageWrapper>
+
+      <QuizSelectionModal 
+        isOpen={isQuizModalOpen} 
+        onClose={() => setIsQuizModalOpen(false)}
+        onStart={handleStartQuiz}
+      />
+    </>
   );
 }
