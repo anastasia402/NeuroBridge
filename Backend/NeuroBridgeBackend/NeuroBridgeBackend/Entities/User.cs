@@ -18,6 +18,10 @@ namespace NeuroBridgeBackend.Entities
         [Required]
         public UserRole Role { get; set; }
 
+        public int? UserGroupId { get; set; }
+
+        public UserGroup? UserGroup { get; set; }
+
         [Column(TypeName = "decimal(3,2)")]
         public decimal? MentorRating { get; set; }
 

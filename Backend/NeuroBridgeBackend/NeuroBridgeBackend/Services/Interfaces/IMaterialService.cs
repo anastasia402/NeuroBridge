@@ -7,6 +7,7 @@ namespace NeuroBridgeBackend.Services.Interfaces
     public interface IMaterialService
     {
         Task<IEnumerable<Material>> GetAllMaterialsAsync();
+        Task<IEnumerable<Material>> GetAllMaterialsWithAssignmentsAsync();
         Task<Material?> GetMaterialByIdAsync(int id);
         Task<IEnumerable<Material>> GetMaterialsByUploaderIdAsync(int uploaderId);
         Task CreateMaterialAsync(Material material);

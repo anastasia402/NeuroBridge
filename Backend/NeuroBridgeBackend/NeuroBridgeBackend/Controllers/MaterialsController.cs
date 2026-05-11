@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using NeuroBridgeBackend.DTOs;
 using NeuroBridgeBackend.Entities;
 using NeuroBridgeBackend.Services.Interfaces;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace NeuroBridgeBackend.Controllers
@@ -13,12 +15,18 @@ namespace NeuroBridgeBackend.Controllers
     {
         private readonly IMaterialService _materialService;
         private readonly IFileService _fileService;
+        private readonly IMaterialAssignmentService _assignmentService;
         private readonly ILogger<MaterialsController> _logger;
 
-        public MaterialsController(IMaterialService materialService, IFileService fileService, ILogger<MaterialsController> logger)
+        public MaterialsController(
+            IMaterialService materialService,
+            IFileService fileService,
+            IMaterialAssignmentService assignmentService,
+            ILogger<MaterialsController> logger)
         {
             _materialService = materialService;
             _fileService = fileService;
+            _assignmentService = assignmentService;
             _logger = logger;
         }
 
@@ -26,11 +34,21 @@ namespace NeuroBridgeBackend.Controllers
         /// Get all materials
         /// </summary>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<MaterialResponseDto>>> GetAllMaterials()
+        public async Task<ActionResult<IEnumerable<MaterialResponseDto>>> GetAllMaterials([FromQuery] int? uploaderId)
         {
             try
             {
-                var materials = await _materialService.GetAllMaterialsAsync();
+                IEnumerable<Material> materials;
+
+                if (uploaderId.HasValue)
+                {
+                    materials = await _materialService.GetMaterialsByUploaderIdAsync(uploaderId.Value);
+                }
+                else
+                {
+                    materials = await _materialService.GetAllMaterialsWithAssignmentsAsync();
+                }
+
                 var response = materials.Select(m => new MaterialResponseDto
                 {
                     Id = m.Id,
@@ -38,7 +56,18 @@ namespace NeuroBridgeBackend.Controllers
                     ContentText = m.ContentText,
                     FileUrl = m.FileUrl,
                     UploaderId = m.UploaderId,
-                    CreatedAt = m.CreatedAt
+                    CreatedAt = m.CreatedAt,
+                    Assignments = m.Assignments?.Select(a => new MaterialAssignmentDto
+                    {
+                        Id = a.Id,
+                        MaterialId = a.MaterialId,
+                        UserId = a.UserId,
+                        UserEmail = a.User?.Email,
+                        AssignedRole = a.AssignedRole,
+                        UserGroupId = a.UserGroupId,
+                        UserGroupName = a.UserGroup?.Name,
+                        AssignedAt = a.AssignedAt
+                    })
                 });
 
                 return Ok(response);
@@ -69,7 +98,18 @@ namespace NeuroBridgeBackend.Controllers
                     ContentText = material.ContentText,
                     FileUrl = material.FileUrl,
                     UploaderId = material.UploaderId,
-                    CreatedAt = material.CreatedAt
+                    CreatedAt = material.CreatedAt,
+                    Assignments = material.Assignments?.Select(a => new MaterialAssignmentDto
+                    {
+                        Id = a.Id,
+                        MaterialId = a.MaterialId,
+                        UserId = a.UserId,
+                        UserEmail = a.User?.Email,
+                        AssignedRole = a.AssignedRole,
+                        UserGroupId = a.UserGroupId,
+                        UserGroupName = a.UserGroup?.Name,
+                        AssignedAt = a.AssignedAt
+                    })
                 };
 
                 return Ok(response);
@@ -142,7 +182,18 @@ namespace NeuroBridgeBackend.Controllers
                     ContentText = material.ContentText,
                     FileUrl = material.FileUrl,
                     UploaderId = material.UploaderId,
-                    CreatedAt = material.CreatedAt
+                    CreatedAt = material.CreatedAt,
+                    Assignments = material.Assignments?.Select(a => new MaterialAssignmentDto
+                    {
+                        Id = a.Id,
+                        MaterialId = a.MaterialId,
+                        UserId = a.UserId,
+                        UserEmail = a.User?.Email,
+                        AssignedRole = a.AssignedRole,
+                        UserGroupId = a.UserGroupId,
+                        UserGroupName = a.UserGroup?.Name,
+                        AssignedAt = a.AssignedAt
+                    })
                 };
 
                 return CreatedAtAction(nameof(GetMaterialById), new { id = material.Id }, response);
@@ -179,13 +230,16 @@ namespace NeuroBridgeBackend.Controllers
         }
 
         /// <summary>
-        /// Delete material by ID
+        /// Delete material by ID (admin only)
         /// </summary>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteMaterial(int id)
         {
             try
             {
+                if (!HasAdminRole())
+                    return Forbid();
+
                 var material = await _materialService.GetMaterialByIdAsync(id);
                 if (material == null)
                     return NotFound(new { error = "Material not found" });
@@ -198,6 +252,90 @@ namespace NeuroBridgeBackend.Controllers
                 _logger.LogError(ex, "Error deleting material");
                 return StatusCode(500, new { error = "Error deleting material" });
             }
+        }
+
+        /// <summary>
+        /// Assign a material to a user, role, or group
+        /// </summary>
+        [HttpPost("{id}/assign")]
+        public async Task<IActionResult> AssignMaterial(int id, [FromBody] AssignMaterialRequest request)
+        {
+            try
+            {
+                if (!HasAdminRole())
+                    return Forbid();
+
+                if (request.UserId.HasValue)
+                {
+                    var assignment = await _assignmentService.AssignToUserAsync(id, request.UserId.Value);
+                    return Ok(new MaterialAssignmentDto
+                    {
+                        Id = assignment.Id,
+                        MaterialId = assignment.MaterialId,
+                        UserId = assignment.UserId,
+                        UserEmail = assignment.User?.Email,
+                        AssignedRole = assignment.AssignedRole,
+                        UserGroupId = assignment.UserGroupId,
+                        UserGroupName = assignment.UserGroup?.Name,
+                        AssignedAt = assignment.AssignedAt
+                    });
+                }
+
+                if (!string.IsNullOrWhiteSpace(request.AssignedRole))
+                {
+                    var assignment = await _assignmentService.AssignToRoleAsync(id, request.AssignedRole);
+                    return Ok(new MaterialAssignmentDto
+                    {
+                        Id = assignment.Id,
+                        MaterialId = assignment.MaterialId,
+                        UserId = assignment.UserId,
+                        UserEmail = assignment.User?.Email,
+                        AssignedRole = assignment.AssignedRole,
+                        UserGroupId = assignment.UserGroupId,
+                        UserGroupName = assignment.UserGroup?.Name,
+                        AssignedAt = assignment.AssignedAt
+                    });
+                }
+
+                if (request.UserGroupId.HasValue)
+                {
+                    var assignment = await _assignmentService.AssignToUserGroupAsync(id, request.UserGroupId.Value);
+                    return Ok(new MaterialAssignmentDto
+                    {
+                        Id = assignment.Id,
+                        MaterialId = assignment.MaterialId,
+                        UserId = assignment.UserId,
+                        UserEmail = assignment.User?.Email,
+                        AssignedRole = assignment.AssignedRole,
+                        UserGroupId = assignment.UserGroupId,
+                        UserGroupName = assignment.UserGroup?.Name,
+                        AssignedAt = assignment.AssignedAt
+                    });
+                }
+
+                return BadRequest(new { error = "At least one assignment target is required: UserId, AssignedRole, or UserGroupId." });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { error = "Material not found" });
+            }
+            catch (ArgumentException argEx)
+            {
+                return BadRequest(new { error = argEx.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error assigning material");
+                return StatusCode(500, new { error = "Error assigning material" });
+            }
+        }
+
+        private bool HasAdminRole()
+        {
+            var roleHeader = Request.Headers["X-User-Role"].FirstOrDefault();
+            var queryRole = Request.Query["role"].FirstOrDefault();
+            var role = roleHeader ?? queryRole;
+            return !string.IsNullOrWhiteSpace(role) && role.Equals("ADMIN", StringComparison.OrdinalIgnoreCase);
         }
     }
 }

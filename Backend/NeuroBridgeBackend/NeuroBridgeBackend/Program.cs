@@ -37,6 +37,18 @@ builder.Services.AddOpenApi();
 // Add SignalR
 builder.Services.AddSignalR();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("LocalCorsPolicy", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:8000", "http://127.0.0.1:8000")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
+
 // Add hosted services
 builder.Services.AddHostedService<NeuroBridgeBackend.BackgroundServices.ChatCleanupService>();
 
@@ -52,6 +64,8 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+app.UseCors("LocalCorsPolicy");
 
 app.UseHttpsRedirection();
 

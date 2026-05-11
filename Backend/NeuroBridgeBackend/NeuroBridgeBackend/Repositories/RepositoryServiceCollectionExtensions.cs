@@ -14,6 +14,8 @@ namespace NeuroBridgeBackend.Repositories
             services.AddScoped<IQuizRepository, QuizRepository>();
             services.AddScoped<IQuestionRepository, QuestionRepository>();
             services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
+            services.AddScoped<IMaterialAssignmentRepository, MaterialAssignmentRepository>();
+            services.AddScoped<IUserGroupRepository, UserGroupRepository>();
             services.AddScoped<IMentoringSessionRepository, MentoringSessionRepository>();
 
             return services;
