@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using NeuroBridgeBackend.Models;
+using NeuroBridgeBackend.Entities;
 
 namespace NeuroBridgeBackend.Controllers
 {
@@ -8,9 +8,9 @@ namespace NeuroBridgeBackend.Controllers
     [Route("api/[controller]")] 
     public class UsersController : ControllerBase
     {
-        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly UserManager<User> _userManager;
 
-        public UsersController(UserManager<ApplicationUser> userManager)
+        public UsersController(UserManager<User> userManager)
         {
             _userManager = userManager;
         }

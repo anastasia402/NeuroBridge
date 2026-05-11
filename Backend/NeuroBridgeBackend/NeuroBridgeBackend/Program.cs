@@ -1,7 +1,10 @@
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using NeuroBridgeBackend.Context;
-using NeuroBridgeBackend.Models; 
+using NeuroBridgeBackend.Entities;
+using NeuroBridgeBackend.Repositories;
+using NeuroBridgeBackend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,7 +13,25 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+builder.Services.AddRepositories();
+builder.Services.AddServices();
+
+// Add HttpClient factory
+builder.Services.AddHttpClient();
+
+// Configure file upload limits (20MB)
+builder.Services.Configure<IISServerOptions>(options =>
+{
+    options.MaxRequestBodySize = 20 * 1024 * 1024; // 20MB
+});
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.ValueLengthLimit = 20 * 1024 * 1024; // 20MB
+    options.MultipartBodyLengthLimit = 20 * 1024 * 1024; // 20MB
+});
+
+builder.Services.AddIdentity<User, IdentityRole<int>>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
@@ -29,8 +50,32 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+// Add SignalR
+builder.Services.AddSignalR();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("LocalCorsPolicy", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:8000", "http://127.0.0.1:8000")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
+
+// Add hosted services
+builder.Services.AddHostedService<NeuroBridgeBackend.BackgroundServices.ChatCleanupService>();
+
 var app = builder.Build();
 
+// Create uploads directory
+var uploadsPath = Path.Combine(app.Environment.WebRootPath ?? Directory.GetCurrentDirectory(), "uploads");
+if (!Directory.Exists(uploadsPath))
+    Directory.CreateDirectory(uploadsPath);
+
+// Configure the HTTP request pipeline.
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -50,7 +95,12 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseCors("LocalCorsPolicy");
+
 app.UseHttpsRedirection();
+
+// Serve static files from wwwroot
+app.UseStaticFiles();
 
 
 app.UseCors("AllowReactApp");
@@ -60,4 +110,8 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// Map SignalR hub
+app.MapHub<NeuroBridgeBackend.Hubs.ChatHub>("/chatHub");
+
+app.Run();
 app.Run();
