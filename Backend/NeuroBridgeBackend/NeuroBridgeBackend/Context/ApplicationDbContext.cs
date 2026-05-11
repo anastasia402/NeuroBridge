@@ -20,6 +20,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<MentoringSession> MentoringSessions { get; set; } = null!;
     public DbSet<ChatMessage> ChatMessages { get; set; } = null!;
     public DbSet<MentorFeedback> MentorFeedbacks { get; set; } = null!;
+    public DbSet<QuizResult> QuizResults{ get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -207,6 +208,25 @@ public class ApplicationDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.MentorId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<QuizResult>(entity =>
+        {
+            entity.Property(e => e.Id)
+                .UseIdentityColumn();
+            entity.Property(e => e.UserAnswers)
+                .HasColumnType("nvarchar(max)")
+                .IsRequired();
+            entity.Property(e => e.CompletedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.JuniorId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(e => e.Quiz)
+                .WithMany()
+                .HasForeignKey(e => e.QuizId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         base.OnModelCreating(modelBuilder);
