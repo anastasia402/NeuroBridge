@@ -5,6 +5,17 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>cf60c27d-2c78-4b29-8b6e-dd3ce4a85f17</UserSecretsId>
+	  <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+	  <WarningsAsErrors></WarningsAsErrors>
+	  <NoWarn>$(NoWarn);NU1903;NU1603;NU1510</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <WarningsAsErrors />
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <WarningsAsErrors />
   </PropertyGroup>
 
   <ItemGroup>
