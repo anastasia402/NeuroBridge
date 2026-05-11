@@ -8,5 +8,6 @@ namespace NeuroBridgeBackend.DTOs
         public string? FileUrl { get; set; }
         public int UploaderId { get; set; }
         public DateTime CreatedAt { get; set; }
+        public IEnumerable<MaterialAssignmentDto>? Assignments { get; set; }
     }
 }

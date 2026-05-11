@@ -20,6 +20,11 @@ namespace NeuroBridgeBackend.Services
             return await _materialRepository.GetAllAsync();
         }
 
+        public async Task<IEnumerable<Material>> GetAllMaterialsWithAssignmentsAsync()
+        {
+            return await _materialRepository.GetAllWithAssignmentsAsync();
+        }
+
         public async Task<Material?> GetMaterialByIdAsync(int id)
         {
             return await _materialRepository.GetByIdAsync(id);

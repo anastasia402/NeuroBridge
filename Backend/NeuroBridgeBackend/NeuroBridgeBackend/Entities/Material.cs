@@ -25,5 +25,7 @@ namespace NeuroBridgeBackend.Entities
         public string? Summary { get; set; }
 
         public DateTime CreatedAt { get; set; }
+
+        public ICollection<MaterialAssignment> Assignments { get; set; } = new List<MaterialAssignment>();
     }
 }

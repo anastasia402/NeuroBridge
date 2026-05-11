@@ -15,6 +15,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<Material> Materials { get; set; } = null!;
     public DbSet<Quiz> Quizzes { get; set; } = null!;
     public DbSet<Question> Questions { get; set; } = null!;
+    public DbSet<UserGroup> UserGroups { get; set; } = null!;
+    public DbSet<MaterialAssignment> MaterialAssignments { get; set; } = null!;
     public DbSet<MentoringSession> MentoringSessions { get; set; } = null!;
     public DbSet<ChatMessage> ChatMessages { get; set; } = null!;
     public DbSet<MentorFeedback> MentorFeedbacks { get; set; } = null!;
@@ -57,6 +59,52 @@ public class ApplicationDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.UploaderId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<MaterialAssignment>(entity =>
+        {
+            entity.Property(e => e.AssignedRole)
+                .HasMaxLength(50);
+
+            entity.HasOne(e => e.Material)
+                .WithMany(m => m.Assignments)
+                .HasForeignKey(e => e.MaterialId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.UserGroup)
+                .WithMany(g => g.MaterialAssignments)
+                .HasForeignKey(e => e.UserGroupId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.HasIndex(e => e.Email).IsUnique();
+            entity.HasIndex(e => e.Role);
+
+            entity.Property(e => e.Email)
+                .IsRequired();
+
+            entity.Property(e => e.Role)
+                .HasConversion<string>()
+                .HasMaxLength(10)
+                .IsRequired();
+
+            entity.Property(e => e.MentorRating)
+                .HasPrecision(3, 2);
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasOne(e => e.UserGroup)
+                .WithMany(g => g.Users)
+                .HasForeignKey(e => e.UserGroupId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<Quiz>(entity =>

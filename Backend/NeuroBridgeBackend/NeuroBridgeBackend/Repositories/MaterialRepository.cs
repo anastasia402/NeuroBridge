@@ -19,12 +19,25 @@ namespace NeuroBridgeBackend.Repositories
         {
             return await Context.Materials
                 .Where(m => m.UploaderId == uploaderId)
+                .Include(m => m.Assignments)
+                    .ThenInclude(a => a.User)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Material>> GetAllWithAssignmentsAsync()
+        {
+            return await Context.Materials
+                .Include(m => m.Assignments)
+                    .ThenInclude(a => a.User)
                 .ToListAsync();
         }
 
         public async Task<Material?> GetByIdAsync(int id)
         {
-            return await base.GetByIdAsync(id);
+            return await Context.Materials
+                .Include(m => m.Assignments)
+                    .ThenInclude(a => a.User)
+                .FirstOrDefaultAsync(m => m.Id == id);
         }
 
         public async Task DeleteByIdAsync(int id)
