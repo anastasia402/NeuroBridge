@@ -19,6 +19,9 @@ namespace NeuroBridgeBackend.Services
             services.AddScoped<IUserGroupService, UserGroupService>();
             services.AddScoped<IMentoringSessionService, MentoringSessionService>();
 
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<ITokenService, TokenService>();
+
             return services;
         }
     }

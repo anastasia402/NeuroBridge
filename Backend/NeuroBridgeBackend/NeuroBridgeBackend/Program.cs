@@ -1,10 +1,14 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using NeuroBridgeBackend.Context;
 using NeuroBridgeBackend.Entities;
 using NeuroBridgeBackend.Repositories;
 using NeuroBridgeBackend.Services;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +39,30 @@ builder.Services.AddIdentity<User, IdentityRole<int>>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
+// JWT configuration
+var jwtKey = builder.Configuration["Jwt:Key"];
+var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+var key = Encoding.UTF8.GetBytes(jwtKey ?? string.Empty);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtIssuer,
+        IssuerSigningKey = new SymmetricSecurityKey(key)
+    };
+});
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp",
@@ -49,7 +77,24 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
+    });
 
+    c.AddSecurityRequirement((document) => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+    });
+});
 // Add SignalR
 builder.Services.AddSignalR();
 
@@ -58,7 +103,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("LocalCorsPolicy", policy =>
     {
         policy
-            .WithOrigins("http://localhost:8000", "http://127.0.0.1:8000")
+            .WithOrigins("http://localhost:8000", "https://localhost:7142")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
@@ -95,15 +140,22 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 app.UseCors("LocalCorsPolicy");
+app.UseCors("AllowReactApp");
 
 app.UseHttpsRedirection();
+app.MapSwagger().RequireAuthorization();
 
 // Serve static files from wwwroot
 app.UseStaticFiles();
 
 
-app.UseCors("AllowReactApp");
+
 
 app.UseAuthentication(); 
 app.UseAuthorization();
@@ -113,5 +165,4 @@ app.MapControllers();
 // Map SignalR hub
 app.MapHub<NeuroBridgeBackend.Hubs.ChatHub>("/chatHub");
 
-app.Run();
 app.Run();

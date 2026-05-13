@@ -11,7 +11,7 @@ namespace NeuroBridgeBackend.Context
             using var scope = serviceProvider.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
-            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<int>>>();
 
             await context.Database.MigrateAsync();
 
@@ -19,7 +19,7 @@ namespace NeuroBridgeBackend.Context
             foreach (var role in roles)
             {
                 if (!await roleManager.RoleExistsAsync(role))
-                    await roleManager.CreateAsync(new IdentityRole(role));
+                    await roleManager.CreateAsync(new IdentityRole<int> { Name = role });
             }
 
             if (context.Users.Any()) return;

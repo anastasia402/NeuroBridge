@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using NeuroBridgeBackend.Entities;
@@ -5,7 +6,8 @@ using NeuroBridgeBackend.Entities;
 namespace NeuroBridgeBackend.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")] 
+    [Route("api/[controller]")]
+    [Authorize]
     public class UsersController : ControllerBase
     {
         private readonly UserManager<User> _userManager;
