@@ -110,4 +110,144 @@ public class MentoringController : ControllerBase
 
         return Ok(leaderboard);
     }
+
+    [HttpPost("sessions")]
+    public async Task<IActionResult> CreateSession([FromBody] CreateMentoringSessionDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.IssueDescription))
+            return BadRequest("Issue description is required.");
+
+        var junior = await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == dto.JuniorId && u.Role == UserRole.JUNIOR);
+
+        if (junior == null)
+            return NotFound("Junior user not found.");
+
+        var session = new MentoringSession
+        {
+            Id = Guid.NewGuid(),
+            JuniorId = dto.JuniorId,
+            MentorId = null,
+            Topic = "Mentoring request",
+            Description = dto.IssueDescription,
+            IssueDescription = dto.IssueDescription,
+            Status = MentoringSessionStatus.PENDING,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.MentoringSessions.Add(session);
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Mentoring session created successfully.",
+            session.Id,
+            session.JuniorId,
+            session.MentorId,
+            session.Topic,
+            session.Description,
+            session.IssueDescription,
+            session.Status,
+            session.CreatedAt
+        });
+    }
+
+    [HttpGet("sessions/open")]
+    public async Task<IActionResult> GetOpenSessions()
+    {
+        var openSessions = await _context.MentoringSessions
+            .Where(s =>
+                s.MentorId == null &&
+                s.Status == MentoringSessionStatus.PENDING)
+            .Select(s => new
+            {
+                s.Id,
+                s.JuniorId,
+                JuniorName = s.Junior != null ? s.Junior.FullName : null,
+                s.Topic,
+                s.Description,
+                s.IssueDescription,
+                s.CreatedAt,
+                Status = s.Status.ToString()
+            })
+            .OrderByDescending(s => s.CreatedAt)
+            .ToListAsync();
+
+        return Ok(openSessions);
+    }
+
+    [HttpPost("sessions/{id}/accept")]
+    public async Task<IActionResult> AcceptSession(
+        Guid id,
+        [FromBody] AcceptMentoringSessionDto dto)
+    {
+        var session = await _context.MentoringSessions
+            .FirstOrDefaultAsync(s => s.Id == id);
+
+        if (session == null)
+            return NotFound("Session not found.");
+
+        if (session.Status != MentoringSessionStatus.PENDING)
+            return BadRequest("Session is not available anymore.");
+
+        if (session.MentorId != null)
+            return BadRequest("Session already accepted.");
+
+        var mentor = await _context.Users
+            .FirstOrDefaultAsync(u =>
+                u.Id == dto.MentorId &&
+                u.Role == UserRole.MENTOR);
+
+        if (mentor == null)
+            return NotFound("Mentor not found.");
+
+        session.MentorId = dto.MentorId;
+        session.Status = MentoringSessionStatus.IN_PROGRESS;
+        session.StartedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Session accepted successfully.",
+            session.Id,
+            session.MentorId,
+            session.Status,
+            session.StartedAt
+        });
+    }
+
+    [HttpPost("sessions/{uuid}/close")]
+    public async Task<IActionResult> CloseSession(Guid uuid)
+    {
+        var session = await _context.MentoringSessions
+            .FirstOrDefaultAsync(s => s.Id == uuid);
+
+        if (session == null)
+        {
+            return NotFound(new { message = "Session not found." });
+        }
+
+        // doar sesiuni active pot fi închise
+        if (session.Status != MentoringSessionStatus.IN_PROGRESS)
+        {
+            return BadRequest(new
+            {
+                message = "Only active sessions can be closed."
+            });
+        }
+
+        session.Status = MentoringSessionStatus.COMPLETED;
+        session.CompletedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Session closed successfully.",
+            sessionId = session.Id,
+            status = session.Status.ToString(),
+            completedAt = session.CompletedAt
+        });
+    }
 }
