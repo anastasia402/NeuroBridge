@@ -330,6 +330,50 @@ namespace NeuroBridgeBackend.Controllers
             }
         }
 
+        /// <summary>
+        /// Create a material from plain text (no file upload needed)
+        /// </summary>
+        [HttpPost("from-text")]
+        public async Task<ActionResult<MaterialResponseDto>> CreateFromText([FromBody] CreateMaterialFromTextDto request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.Title))
+                    return BadRequest(new { error = "Title is required" });
+
+                if (string.IsNullOrWhiteSpace(request.Content) || request.Content.Length < 50)
+                    return BadRequest(new { error = "Content must be at least 50 characters" });
+
+                if (request.UploaderId <= 0)
+                    return BadRequest(new { error = "Valid UploaderId is required" });
+
+                var material = new Material
+                {
+                    Title = request.Title,
+                    ContentText = request.Content,
+                    FileUrl = null,
+                    UploaderId = request.UploaderId,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _materialService.CreateMaterialAsync(material);
+
+                return CreatedAtAction(nameof(GetMaterialById), new { id = material.Id }, new MaterialResponseDto
+                {
+                    Id = material.Id,
+                    Title = material.Title,
+                    ContentText = material.ContentText,
+                    UploaderId = material.UploaderId,
+                    CreatedAt = material.CreatedAt
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating material from text");
+                return StatusCode(500, new { error = "Error creating material", details = ex.Message });
+            }
+        }
+
         private bool HasAdminRole()
         {
             var roleHeader = Request.Headers["X-User-Role"].FirstOrDefault();

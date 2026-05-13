@@ -36,5 +36,21 @@ namespace NeuroBridgeBackend.Repositories
                 await SaveChangesAsync();
             }
         }
+
+        public async Task<IEnumerable<Quiz>> GetAllWithQuestionsAsync()
+        {
+            return await Context.Quizzes
+                .Include(q => q.Questions)
+                .Include(q => q.Material)
+                .ToListAsync();
+        }
+
+        public async Task<Quiz?> GetWithQuestionsAsync(int id)
+        {
+            return await Context.Quizzes
+                .Include(q => q.Questions)
+                .Include(q => q.Material)
+                .FirstOrDefaultAsync(q => q.Id == id);
+        }
     }
 }

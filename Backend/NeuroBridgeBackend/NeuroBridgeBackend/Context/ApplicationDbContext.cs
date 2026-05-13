@@ -21,7 +21,8 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<int>, i
     public DbSet<MaterialAssignment> MaterialAssignments { get; set; } = null!;
     public DbSet<ChatMessage> ChatMessages { get; set; } = null!;
     public DbSet<MentorFeedback> MentorFeedbacks { get; set; } = null!;
-    public DbSet<QuizResult> QuizResults{ get; set; }
+    public DbSet<QuizResult> QuizResults { get; set; }
+    public DbSet<OrganizationSetting> OrganizationSettings { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -230,6 +231,13 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<int>, i
                 .WithMany()
                 .HasForeignKey(e => e.QuizId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<OrganizationSetting>(entity =>
+        {
+            entity.ToTable("organization_settings");
+            entity.HasKey(e => e.Key);
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("GETUTCDATE()");
         });
 
         base.OnModelCreating(modelBuilder);

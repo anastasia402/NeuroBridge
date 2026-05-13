@@ -1,29 +1,33 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PageWrapper from '../../components/layout/PageWrapper';
 import Button from '../../components/common/Button';
 import ProgressBar from '../../components/common/ProgressBar';
 import QuizSelectionModal from '../../features/quizzes/QuizSelectionModal';
+import QuizEngine from '../../features/quizzes/QuizEngine';
 
 export default function JuniorDashboard() {
+  const navigate = useNavigate();
   const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
+  const [isQuizRunning, setIsQuizRunning] = useState(false);
 
-  const handleStartQuiz = (type) => {
-    console.log("Starting quiz of type:", type);
+  const handleStartQuiz = () => {
     setIsQuizModalOpen(false);
+    setIsQuizRunning(true);
   };
 
   return (
     <>
       <PageWrapper role="JUNIOR" userName="Alex" activePath="/dashboard">
         <div className="max-w-md mx-auto pb-8">
-          
+
           <div className="flex justify-between items-center mb-8">
             <div className="bg-gray-900 p-2 rounded-xl text-white shadow-sm">
               <span className="text-xl">⚡</span>
             </div>
             <div className="flex space-x-4 text-gray-400">
               <button className="text-xl hover:text-gray-900 transition-colors">❔</button>
-              <button className="text-xl hover:text-gray-900 transition-colors">⚙️</button>
+              <button onClick={() => navigate('/profile')} className="text-xl hover:text-gray-900 transition-colors">⚙️</button>
             </div>
           </div>
 
@@ -44,13 +48,16 @@ export default function JuniorDashboard() {
           </div>
 
           <div className="grid grid-cols-2 gap-4 mb-10">
-            <div className="bg-blue-50/50 p-6 rounded-[2.5rem] hover:bg-blue-100 transition-all cursor-pointer border border-transparent hover:border-blue-200">
+            <div
+              onClick={() => navigate('/study')}
+              className="bg-blue-50/50 p-6 rounded-[2.5rem] hover:bg-blue-100 transition-all cursor-pointer border border-transparent hover:border-blue-200"
+            >
               <span className="bg-white w-10 h-10 rounded-xl flex items-center justify-center mb-4 shadow-sm border border-blue-50 text-lg">📖</span>
               <h3 className="font-bold text-gray-900 text-sm mb-1">Study Materials</h3>
               <p className="text-[10px] text-gray-500 leading-relaxed">Dive into your saved lessons and library</p>
             </div>
-            
-            <div 
+
+            <div
               onClick={() => setIsQuizModalOpen(true)}
               className="bg-gray-50/50 p-6 rounded-[2.5rem] hover:bg-gray-100 transition-all cursor-pointer border border-transparent hover:border-gray-200"
             >
@@ -59,13 +66,19 @@ export default function JuniorDashboard() {
               <p className="text-[10px] text-gray-500 leading-relaxed">Test your knowledge with AI challenges</p>
             </div>
 
-            <div className="bg-gray-50/50 p-6 rounded-[2.5rem] hover:bg-gray-100 transition-all cursor-pointer border border-transparent hover:border-gray-200">
+            <div
+              onClick={() => navigate('/mentors')}
+              className="bg-gray-50/50 p-6 rounded-[2.5rem] hover:bg-gray-100 transition-all cursor-pointer border border-transparent hover:border-gray-200"
+            >
               <span className="bg-white w-10 h-10 rounded-xl flex items-center justify-center mb-4 shadow-sm border border-gray-50 text-lg">👥</span>
               <h3 className="font-bold text-gray-900 text-sm mb-1">Connect Mentor</h3>
               <p className="text-[10px] text-gray-500 leading-relaxed">Get personalized help from experts</p>
             </div>
 
-            <div className="bg-blue-50/50 p-6 rounded-[2.5rem] hover:bg-blue-100 transition-all cursor-pointer border border-transparent hover:border-blue-200">
+            <div
+              onClick={() => navigate('/stats')}
+              className="bg-blue-50/50 p-6 rounded-[2.5rem] hover:bg-blue-100 transition-all cursor-pointer border border-transparent hover:border-blue-200"
+            >
               <span className="bg-white w-10 h-10 rounded-xl flex items-center justify-center mb-4 shadow-sm border border-blue-50 text-lg">✨</span>
               <h3 className="font-bold text-gray-900 text-sm mb-1">Suggestions</h3>
               <p className="text-[10px] text-gray-500 leading-relaxed">Personalized paths based on your stats</p>
@@ -79,7 +92,7 @@ export default function JuniorDashboard() {
               <span className="bg-orange-200 text-orange-900 text-[10px] font-bold px-2.5 py-1 rounded-lg shadow-sm">DUE NOW</span>
             </div>
             <p className="text-xs text-gray-600 mb-6 italic leading-relaxed">"Reviewing this now will bridge your memory gaps from yesterday."</p>
-            <Button 
+            <Button
               onClick={() => setIsQuizModalOpen(true)}
               className="w-full bg-orange-100 text-orange-800 hover:bg-orange-200 py-4 rounded-2xl font-bold shadow-sm"
             >
@@ -95,26 +108,31 @@ export default function JuniorDashboard() {
               <p className="text-sm text-gray-700 mb-6 leading-relaxed">
                 Reviewing information right before you're about to forget it strengthens your neural pathways by 300%. NeuroBridge uses this to help you learn faster.
               </p>
-              <button className="text-sm font-bold text-gray-900 flex items-center hover:translate-x-1 transition-transform group">
+              <button
+                onClick={() => navigate('/study')}
+                className="text-sm font-bold text-gray-900 flex items-center hover:translate-x-1 transition-transform group"
+              >
                 Explore memory tips <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
               </button>
             </div>
-            <div className="absolute top-0 right-0 -mr-12 -mt-12 w-48 h-48 bg-orange-200/20 rounded-full blur-3xl"></div>
+            <div className="absolute top-0 right-0 -mr-12 -mt-12 w-48 h-48 bg-orange-200/20 rounded-full blur-3xl" />
           </div>
 
           <div className="text-center py-8">
-            <div className="h-[1px] w-12 bg-gray-100 mx-auto mb-6"></div>
+            <div className="h-[1px] w-12 bg-gray-100 mx-auto mb-6" />
             <p className="text-sm text-gray-300 italic font-medium">"Small steps lead to big bridges."</p>
           </div>
 
         </div>
       </PageWrapper>
 
-      <QuizSelectionModal 
-        isOpen={isQuizModalOpen} 
+      <QuizSelectionModal
+        isOpen={isQuizModalOpen}
         onClose={() => setIsQuizModalOpen(false)}
         onStart={handleStartQuiz}
       />
+
+      {isQuizRunning && <QuizEngine onClose={() => setIsQuizRunning(false)} />}
     </>
   );
 }

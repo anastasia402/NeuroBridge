@@ -4,6 +4,7 @@ namespace NeuroBridgeBackend.Entities
     {
         PENDING,
         ACTIVE,
-        COMPLETED
+        COMPLETED,
+        REJECTED
     }
 }

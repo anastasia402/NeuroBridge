@@ -365,6 +365,27 @@ namespace NeuroBridgeBackend.Migrations
                     b.ToTable("MentoringSessions");
                 });
 
+            modelBuilder.Entity("NeuroBridgeBackend.Entities.OrganizationSetting", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("organization_settings", (string)null);
+                });
+
             modelBuilder.Entity("NeuroBridgeBackend.Entities.Question", b =>
                 {
                     b.Property<int>("Id")
@@ -520,6 +541,9 @@ namespace NeuroBridgeBackend.Migrations
 
                     b.Property<string>("FullName")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<int>("Level")
                         .HasColumnType("int");
