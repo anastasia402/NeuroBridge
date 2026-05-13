@@ -11,6 +11,12 @@
 *.sln.docstates
 *.env
 
+# Secrets — nu trimite in git
+appsettings.Development.json
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.json.example
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
