@@ -25,32 +25,6 @@ export default function NotificationBell() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    const pollInterval = setInterval(() => {
-      // TODO: Replace this with your actual Axios/fetch call to your .NET Backend
-      
-      console.log('Polling for new notifications...');
-      
-      if (Math.random() > 0.7) {
-        const newNotif = {
-          id: Date.now(),
-          type: 'MATERIAL',
-          message: 'Admin approved a new study material',
-          time: 'Just now',
-          path: '/study',
-          read: false,
-          icon: '📖'
-        };
-        
-        setNotifications(prev => [newNotif, ...prev]);
-        
-        setIsAnimating(true);
-        setTimeout(() => setIsAnimating(false), 1000);
-      }
-    }, 30000); 
-
-    return () => clearInterval(pollInterval);
-  }, []);
 
   const handleNotificationClick = (notif) => {
     setNotifications(notifications.map(n => n.id === notif.id ? { ...n, read: true } : n));
@@ -131,8 +105,11 @@ export default function NotificationBell() {
           
           {/* Dropdown Footer */}
           <div className="p-3 bg-gray-50 text-center border-t border-gray-100">
-            <button className="text-xs font-bold text-gray-500 hover:text-gray-900">
-              View all settings
+            <button
+              onClick={() => { setIsOpen(false); navigate('/profile'); }}
+              className="text-xs font-bold text-gray-500 hover:text-gray-900"
+            >
+              Notification settings →
             </button>
           </div>
         </div>
