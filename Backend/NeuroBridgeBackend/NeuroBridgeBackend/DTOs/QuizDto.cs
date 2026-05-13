@@ -19,11 +19,4 @@ namespace NeuroBridgeBackend.DTOs
         public string[] Options { get; set; } = Array.Empty<string>();
         public int CorrectIndex { get; set; }
     }
-
-    public class SubmitQuizResultRequest
-    {
-        public int Score { get; set; }
-        public int TotalQuestions { get; set; }
-        public int[]? UserAnswers { get; set; }
-    }
 }

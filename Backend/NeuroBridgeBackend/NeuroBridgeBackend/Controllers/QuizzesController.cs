@@ -1,11 +1,9 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NeuroBridgeBackend.Context;
 using NeuroBridgeBackend.DTOs;
 using NeuroBridgeBackend.Entities;
 using NeuroBridgeBackend.Services.Interfaces;
-using System.Security.Claims;
 
 namespace NeuroBridgeBackend.Controllers
 {
@@ -124,38 +122,6 @@ namespace NeuroBridgeBackend.Controllers
             {
                 return BadRequest(ex.Message);
             }
-        }
-
-        /// <summary>POST /api/quizzes/{id}/results — salvează rezultatul unui quiz</summary>
-        [HttpPost("{id}/results")]
-        [Authorize]
-        public async Task<IActionResult> SubmitResult(int id, [FromBody] SubmitQuizResultRequest request)
-        {
-            var quiz = await _quizService.GetQuizByIdAsync(id);
-            if (quiz == null) return NotFound($"Quiz {id} not found");
-
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(userIdStr, out var userId))
-                return Unauthorized();
-
-            var result = new QuizResult
-            {
-                JuniorId = userId,
-                QuizId = id,
-                Score = request.Score,
-                TotalQuestions = request.TotalQuestions,
-                UserAnswers = System.Text.Json.JsonSerializer.Serialize(request.UserAnswers ?? Array.Empty<int>()),
-                CompletedAt = DateTime.UtcNow
-            };
-
-            _context.QuizResults.Add(result);
-            await _context.SaveChangesAsync();
-
-            var pct = result.TotalQuestions > 0
-                ? (int)Math.Round((double)result.Score / result.TotalQuestions * 100)
-                : 0;
-
-            return Ok(new { id = result.Id, percentage = pct });
         }
 
         private static QuizDto MapToDto(Quiz quiz) => new()

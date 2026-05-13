@@ -1,15 +1,18 @@
-export const getToken = () => localStorage.getItem('token');
-export const getRole  = () => localStorage.getItem('role');
-export const getUserId   = () => localStorage.getItem('userId');
-export const getUserName = () => localStorage.getItem('fullName') || 'User';
+export const getToken = () => {
+  return localStorage.getItem('token');
+};
 
-export const isAuthenticated = () => !!getToken();
+export const getRole = () => {
+  return localStorage.getItem('role');
+};
+
+export const isAuthenticated = () => {
+  return !!getToken();
+};
 
 export const logout = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('role');
-  localStorage.removeItem('userId');
-  localStorage.removeItem('fullName');
   window.location.href = '/login';
 };
 

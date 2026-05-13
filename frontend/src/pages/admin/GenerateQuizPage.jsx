@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import PageWrapper from '../../components/layout/PageWrapper';
 import { apiPost, apiUpload } from '../../services/authService';
 
 const STEPS = ['Material', 'Configure', 'Generate'];
 
 export default function GenerateQuizPage() {
-  const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [inputMode, setInputMode] = useState('text'); // 'text' | 'file'
   const [contentText, setContentText] = useState('');
@@ -247,7 +245,7 @@ export default function GenerateQuizPage() {
                 className="flex-1 py-3 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50">
                 Generate Another
               </button>
-              <button onClick={() => navigate('/admin/quizzes')}
+              <button onClick={() => window.location.href = '/admin/quizzes'}
                 className="flex-1 py-3 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700">
                 Review Quizzes →
               </button>

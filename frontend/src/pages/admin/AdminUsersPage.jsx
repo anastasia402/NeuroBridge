@@ -23,8 +23,8 @@ export default function AdminUsersPage() {
     try {
       const params = new URLSearchParams({ page, pageSize, ...(search && { search }), ...(roleFilter && { role: roleFilter }) });
       const data = await apiGet(`/api/admin/users?${params}`);
-      setUsers(data.items || []);
-      setTotal(data.totalCount || 0);
+      setUsers(data.users || []);
+      setTotal(data.total || 0);
     } catch { setUsers([]); }
     setLoading(false);
   }, [page, search, roleFilter]);
