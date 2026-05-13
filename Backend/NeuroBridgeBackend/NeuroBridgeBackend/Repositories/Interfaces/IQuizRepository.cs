@@ -10,5 +10,7 @@ namespace NeuroBridgeBackend.Repositories.Interfaces
         Task<IEnumerable<Quiz>> GetByMaterialIdAsync(int materialId);
         Task<Quiz?> GetByIdAsync(int id);
         Task DeleteByIdAsync(int id);
+        Task<IEnumerable<Quiz>> GetAllWithQuestionsAsync();
+        Task<Quiz?> GetWithQuestionsAsync(int id);
     }
 }

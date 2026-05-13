@@ -12,5 +12,9 @@ namespace NeuroBridgeBackend.Services.Interfaces
         Task CreateQuizAsync(Quiz quiz);
         Task UpdateQuizAsync(Quiz quiz);
         Task DeleteQuizAsync(int id);
+        Task<IEnumerable<Quiz>> GetAllWithQuestionsAsync();
+        Task<Quiz?> GetWithQuestionsAsync(int id);
+        Task<Quiz> ApproveQuizAsync(int id);
+        Task<Quiz> RejectQuizAsync(int id);
     }
 }

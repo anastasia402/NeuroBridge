@@ -1,16 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PageWrapper from '../../components/layout/PageWrapper';
 import ProfileHero from '../../features/profile/ProfileHero';
 import SettingsItem from '../../features/profile/SettingsItem';
+import { logout } from '../../utils/authUtils';
 
 export default function Profile() {
+  const [quietMode, setQuietMode]     = useState(false);
+  const [gentleCopy, setGentleCopy]   = useState(true);
+  const [notifications, setNotifications] = useState(true);
+
+  const toast = (msg) => alert(msg);
+
   return (
     <PageWrapper role="JUNIOR" userName="Alex" activePath="/profile">
       <div className="max-w-md mx-auto pb-10">
-        
+
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Profile</h1>
-          <button className="text-xl text-gray-400 hover:text-gray-900">⚙️</button>
         </div>
 
         <ProfileHero
@@ -22,27 +28,80 @@ export default function Profile() {
 
         <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-4 ml-2">Account & Learning</h3>
         <div className="bg-white border border-gray-100 rounded-[2rem] overflow-hidden shadow-sm mb-8 divide-y divide-gray-50">
-          <SettingsItem icon="🔔" label="Notifications" subtext="Daily reminders & activity alerts" />
-          <SettingsItem icon="⏱" label="Study Reminders" subtext="Mon, Wed, Fri at 6:00 PM" />
-          <SettingsItem icon="🧠" label="AI Quiz Preferences" subtext="Short format, Conceptual focus" />
-          <SettingsItem icon="🌐" label="App Language" value="English (US)" />
+          <SettingsItem
+            icon="🔔"
+            label="Notifications"
+            subtext={notifications ? 'Daily reminders & activity alerts' : 'Notifications off'}
+            isToggle={true}
+            toggled={notifications}
+            onClick={() => setNotifications(p => !p)}
+          />
+          <SettingsItem
+            icon="⏱"
+            label="Study Reminders"
+            subtext="Mon, Wed, Fri at 6:00 PM"
+            onClick={() => toast('Study Reminders — coming soon')}
+          />
+          <SettingsItem
+            icon="🧠"
+            label="AI Quiz Preferences"
+            subtext="Short format, Conceptual focus"
+            onClick={() => toast('AI Quiz Preferences — coming soon')}
+          />
+          <SettingsItem
+            icon="🌐"
+            label="App Language"
+            value="English (US)"
+            onClick={() => toast('Language settings — coming soon')}
+          />
         </div>
 
         <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-4 ml-2">Experience</h3>
         <div className="bg-white border border-gray-100 rounded-[2rem] overflow-hidden shadow-sm mb-8 divide-y divide-gray-50">
-          <SettingsItem icon="🌙" label="Quiet Mode" subtext="Mutes all sounds during study" isToggle={true} />
-          <SettingsItem icon="🍃" label="Gentle Copy" subtext="Use softer, encouraging feedback" isToggle={true} />
+          <SettingsItem
+            icon="🌙"
+            label="Quiet Mode"
+            subtext="Mutes all sounds during study"
+            isToggle={true}
+            toggled={quietMode}
+            onClick={() => setQuietMode(p => !p)}
+          />
+          <SettingsItem
+            icon="🍃"
+            label="Gentle Copy"
+            subtext="Use softer, encouraging feedback"
+            isToggle={true}
+            toggled={gentleCopy}
+            onClick={() => setGentleCopy(p => !p)}
+          />
         </div>
 
         <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-4 ml-2">Support</h3>
         <div className="bg-white border border-gray-100 rounded-[2rem] overflow-hidden shadow-sm mb-8 divide-y divide-gray-50">
-          <SettingsItem icon="❓" label="Help Center" subtext="FAQs and platform tutorials" />
-          <SettingsItem icon="💬" label="Send Feedback" subtext="Help us improve your experience" />
-          <SettingsItem icon="🛡️" label="Privacy & Data" subtext="Manage your learning history" />
+          <SettingsItem
+            icon="❓"
+            label="Help Center"
+            subtext="FAQs and platform tutorials"
+            onClick={() => toast('Help Center — coming soon')}
+          />
+          <SettingsItem
+            icon="💬"
+            label="Send Feedback"
+            subtext="Help us improve your experience"
+            onClick={() => toast('Feedback — coming soon')}
+          />
+          <SettingsItem
+            icon="🛡️"
+            label="Privacy & Data"
+            subtext="Manage your learning history"
+            onClick={() => toast('Privacy & Data — coming soon')}
+          />
         </div>
 
-        {/* Sign Out Button [cite: 721] */}
-        <button className="w-full bg-red-50 text-red-600 font-bold py-4 rounded-[2rem] flex items-center justify-center space-x-3 hover:bg-red-100 transition-colors">
+        <button
+          onClick={logout}
+          className="w-full bg-red-50 text-red-600 font-bold py-4 rounded-[2rem] flex items-center justify-center space-x-3 hover:bg-red-100 transition-colors"
+        >
           <span>🚪</span>
           <span>Sign Out</span>
         </button>

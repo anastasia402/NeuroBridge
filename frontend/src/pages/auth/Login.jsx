@@ -1,58 +1,37 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
+const ROLE_ROUTES = {
+  Admin:  '/admin/dashboard',
+  Mentor: '/mentor/sessions',
+  Junior: '/dashboard',
+};
+
 const Login = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
-  const validateForm = () => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: undefined }));
+  };
+
+  const validate = () => {
     const newErrors = {};
-
-    // validare email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email-ul este obligatoriu.';
-    } else if (!emailRegex.test(formData.email)) {
-      newErrors.email = 'Email-ul nu este valid.';
-    }
-
-    // validare parola
-    if (!formData.password.trim()) {
-      newErrors.password = 'Parola este obligatorie.';
-    } else if (formData.password.length < 8) {
-      newErrors.password = 'Parola trebuie să aibă minim 8 caractere.';
-    }
-
+    if (!formData.email.trim()) newErrors.email = 'Email-ul este obligatoriu.';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = 'Email invalid.';
+    if (!formData.password.trim()) newErrors.password = 'Parola este obligatorie.';
+    else if (formData.password.length < 8) newErrors.password = 'Minim 8 caractere.';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: undefined,
-      }));
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
+    if (!validate()) return;
 
     setIsLoading(true);
     setErrors({});
@@ -60,74 +39,30 @@ const Login = () => {
     try {
       const response = await fetch('http://localhost:5294/api/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
       const data = await response.json();
 
-      if (!response.ok || !data.success) {
-          setErrors({
-              server: (data.errors && data.errors.length > 0) ? data.errors[0] : 'Eroare la conectare.',
-          });
-          return;
-      }
-
-      const token = data.token;
-
-      if (!token) {
-        setErrors({ server: 'Serverul nu a trimis un token valid.' });
+      if (!response.ok) {
+        setErrors({ server: data.message || 'Eroare la conectare.' });
         return;
       }
 
-      // decodare pt rol
-      let roleFromServer = '';
-      try {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('role', data.role);
+      localStorage.setItem('userId', data.userId);
+      localStorage.setItem('fullName', data.fullName);
 
-        const payload = JSON.parse(jsonPayload);
-        
-        roleFromServer = payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || payload.role;
-      } catch (e) {
-        console.error("Eroare la decodarea token-ului:", e);
-        setErrors({ server: 'Eroare la procesarea datelor de login.' });
+      const route = ROLE_ROUTES[data.role];
+      if (!route) {
+        setErrors({ server: 'Rol invalid.' });
         return;
       }
-
-      if (!roleFromServer) {
-        setErrors({ server: 'Rolul utilizatorului nu a fost găsit în token.' });
-        return;
-      }
-
-      localStorage.setItem('token', token);
-      localStorage.setItem('role', roleFromServer);
-      
-      const routes = {
-        admin: '/admin/dashboard',
-        mentor: '/mentor/dashboard',
-        junior: '/dashboard'
-      };
-
-      const userRole = roleFromServer.toLowerCase();
-      const dashboard = routes[userRole];
-
-      if (!dashboard) {
-        setErrors({ server: `Acces interzis: rolul "${roleFromServer}" nu are o rută configurată.` });
-        return;
-      }
-
-      navigate(dashboard);
-
-    } catch (error) {
-      setErrors({
-        server: 'Eroare de conexiune. Încearcă din nou.',
-      });
+      navigate(route);
+    } catch {
+      setErrors({ server: 'Eroare de conexiune. Încearcă din nou.' });
     } finally {
       setIsLoading(false);
     }
@@ -136,14 +71,12 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center px-6 py-12">
       <div className="max-w-md mx-auto w-full">
-        {/* Logo */}
         <div className="flex justify-center mb-10">
           <div className="bg-gray-900 p-3 rounded-2xl text-white shadow-lg shadow-gray-200">
             <span className="text-2xl">⚡</span>
           </div>
         </div>
 
-        {/* Login Card */}
         <div className="bg-white border border-gray-100 p-10 rounded-[3rem] shadow-sm">
           <div className="mb-8 text-center">
             <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Welcome back</h1>
@@ -151,9 +84,9 @@ const Login = () => {
           </div>
 
           {errors.server && (
-          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-2xl text-sm mb-6 font-medium text-center">
-          {errors.server}
-          </div>
+            <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-2xl text-sm text-red-600 text-center">
+              {errors.server}
+            </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -168,8 +101,8 @@ const Login = () => {
                 onChange={handleChange}
                 className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all"
                 placeholder="alex@example.com"
-                required
               />
+              {errors.email && <p className="text-red-500 text-xs mt-1 ml-4">{errors.email}</p>}
             </div>
 
             <div>
@@ -183,8 +116,8 @@ const Login = () => {
                 onChange={handleChange}
                 className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all"
                 placeholder="••••••••"
-                required
               />
+              {errors.password && <p className="text-red-500 text-xs mt-1 ml-4">{errors.password}</p>}
             </div>
 
             <button

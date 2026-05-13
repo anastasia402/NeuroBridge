@@ -19,8 +19,23 @@ namespace NeuroBridgeBackend.Context
             foreach (var role in roles)
             {
                 if (!await roleManager.RoleExistsAsync(role))
-                    await roleManager.CreateAsync(new IdentityRole<int> { Name = role });
+                    await roleManager.CreateAsync(new IdentityRole<int>(role));
             }
+
+            // Seed organization settings (run every time — upsert)
+            var defaultSettings = new Dictionary<string, string>
+            {
+                ["organization_name"] = "NeuroBridge",
+                ["primary_color"]     = "#111827",
+                ["logo_url"]          = "",
+                ["welcome_message"]   = "Welcome to NeuroBridge"
+            };
+            foreach (var (key, value) in defaultSettings)
+            {
+                if (!context.OrganizationSettings.Any(s => s.Key == key))
+                    context.OrganizationSettings.Add(new OrganizationSetting { Key = key, Value = value });
+            }
+            await context.SaveChangesAsync();
 
             if (context.Users.Any()) return;
 
@@ -57,6 +72,7 @@ namespace NeuroBridgeBackend.Context
                 Id = Guid.NewGuid(),
                 JuniorId = alex.Id,
                 MentorId = mentors[0].Id,
+                Topic = "Spaced Repetition",
                 IssueDescription = "I'm having trouble understanding how Spaced Repetition handles critical failure points.",
                 Status = MentoringSessionStatus.COMPLETED,
                 CreatedAt = DateTime.UtcNow.AddDays(-1),

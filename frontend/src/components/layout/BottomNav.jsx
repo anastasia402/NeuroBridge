@@ -6,11 +6,12 @@ export default function BottomNav() {
   const location = useLocation();
 
   const navItems = [
-    { name: 'Home', path: '/dashboard', icon: '🏠' },
-    { name: 'Study', path: '/study', icon: '📖' },
-    { name: 'Mentors', path: '/mentors', icon: '👥' },
-    { name: 'Stats', path: '/stats', icon: '📊' },
-    { name: 'Profile', path: '/profile', icon: '👤' },
+    { name: 'Home',    path: '/dashboard', icon: '🏠' },
+    { name: 'Study',   path: '/study',     icon: '📖' },
+    { name: 'Quizzes', path: '/quizzes',   icon: '⚡' },
+    { name: 'Mentors', path: '/mentors',   icon: '👥' },
+    { name: 'Stats',   path: '/stats',     icon: '📊' },
+    { name: 'Profile', path: '/profile',   icon: '👤' },
   ];
 
   return (

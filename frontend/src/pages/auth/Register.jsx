@@ -1,112 +1,44 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
+const ROLE_ROUTES = {
+  Junior: '/dashboard',
+  Mentor: '/mentor/sessions',
+};
+
 const Register = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    fullName: '',
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'junior',
+    role: 'Junior',
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
-  const validateForm = () => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: undefined }));
+  };
+
+  const validate = () => {
     const newErrors = {};
-
-    // validare nume
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = 'Prenumele este obligatoriu.';
-    }
-
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = 'Numele de familie este obligatoriu.';
-    }
-
-    // validare email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email-ul este obligatoriu.';
-    } else if (!emailRegex.test(formData.email)) {
-      newErrors.email = 'Email-ul nu este valid.';
-    }
-
-    // validare parola
-    if (!formData.password.trim()) {
-      newErrors.password = 'Parola este obligatorie.';
-    } else if (formData.password.length < 8) {
-      newErrors.password = 'Parola trebuie să aibă minim 8 caractere.';
-    }
-
-    // validare confirmare parola
-    if (!formData.confirmPassword.trim()) {
-      newErrors.confirmPassword = 'Confirmarea parolei este obligatorie.';
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Parolele nu se potrivesc.';
-    }
-
-    // validare rol
-    if (!formData.role) {
-      newErrors.role = 'Selectează un rol';
-    }
-
+    if (!formData.fullName.trim()) newErrors.fullName = 'Numele este obligatoriu.';
+    if (!formData.email.trim()) newErrors.email = 'Email-ul este obligatoriu.';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = 'Email invalid.';
+    if (!formData.password.trim()) newErrors.password = 'Parola este obligatorie.';
+    else if (formData.password.length < 8) newErrors.password = 'Minim 8 caractere.';
+    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Parolele nu se potrivesc.';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: undefined,
-      }));
-    }
-  };
-
-const handleSubmit = async (e) => {
-  e.preventDefault();
-
-  if (!validateForm()) return;
-
-  setIsLoading(true);
-  try {
-    const payload = {
-      email: formData.email,
-      password: formData.password,
-      fullName: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
-      role: formData.role
-    };
-
-    const response = await fetch('http://localhost:5294/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      let errorMessage = 'Eroare la înregistrare.';
-
-      if (data.errors) {
-        const allErrors = Object.values(data.errors).flat();
-        errorMessage = allErrors[0];
-      } else if (data.message) {
-        errorMessage = data.message;
-      }
-
-      setErrors({ server: errorMessage });
-      return;
-    }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validate()) return;
 
     if (data.token) {
             localStorage.setItem('token', data.token);
@@ -119,25 +51,39 @@ const handleSubmit = async (e) => {
             
             localStorage.setItem('role', role);
 
-            // redirect la dashboard (daca este token)
-            const dashboard = role.toLowerCase() === 'junior' ? '/dashboard' : '/mentor/dashboard';
-            navigate(dashboard);
-        } else {
-            navigate('/login');
-        }
+    try {
+      const { confirmPassword, ...payload } = formData;
 
-  } catch (error) {
-    setErrors({ server: 'Eroare de conexiune.' });
-  } finally {
-    setIsLoading(false);
+      const response = await fetch('http://localhost:5294/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setErrors({ server: data.message || 'Eroare la înregistrare.' });
+        return;
+      }
+
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('role', data.role);
+      localStorage.setItem('userId', data.userId);
+      localStorage.setItem('fullName', data.fullName);
+
+      navigate(ROLE_ROUTES[data.role] ?? '/dashboard');
+    } catch {
+      setErrors({ server: 'Eroare de conexiune. Încearcă din nou.' });
+    } finally {
+      setIsLoading(false);
+    }
   }
 };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center px-6 py-12">
       <div className="max-w-md mx-auto w-full">
-        
-        {/* Logo */}
         <div className="flex justify-center mb-10">
           <div className="bg-gray-900 p-3 rounded-2xl text-white shadow-lg shadow-gray-200">
             <span className="text-2xl">⚡</span>
@@ -151,45 +97,27 @@ const handleSubmit = async (e) => {
           </div>
 
           {errors.server && (
-          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-2xl text-sm mb-6 font-medium text-center">
-          {errors.server}
-          </div>
+            <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-2xl text-sm text-red-600 text-center">
+              {errors.server}
+            </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Input Prenume */}
             <div>
               <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-4 mb-2 block">
                 First Name
               </label>
               <input
                 type="text"
-                name="firstName"
-                value={formData.firstName}
+                name="fullName"
+                value={formData.fullName}
                 onChange={handleChange}
                 className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all"
-                placeholder="Alex"
+                placeholder="Alex Johnson"
               />
-              {errors.firstName && <p className="text-red-500 text-[10px] mt-1 ml-4">{errors.firstName}</p>}
+              {errors.fullName && <p className="text-red-500 text-xs mt-1 ml-4">{errors.fullName}</p>}
             </div>
 
-            {/* Input Nume de familie */}
-            <div>
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-4 mb-2 block">
-                Last Name
-              </label>
-              <input
-                type="text"
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleChange}
-                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all"
-                placeholder="Johnson"
-              />
-              {errors.lastName && <p className="text-red-500 text-[10px] mt-1 ml-4">{errors.lastName}</p>}
-            </div>
-
-            {/* Input Email */}
             <div>
               <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-4 mb-2 block">
                 Email Address
@@ -201,27 +129,25 @@ const handleSubmit = async (e) => {
                 onChange={handleChange}
                 className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all"
                 placeholder="alex@example.com"
-                required
               />
-              {errors.email && <span className="text-red-500 text-xs ml-4">{errors.email}</span>}
+              {errors.email && <p className="text-red-500 text-xs mt-1 ml-4">{errors.email}</p>}
             </div>
 
-            {/* Selectare Rol */}
             <div>
               <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-4 mb-2 block">
                 I am a...
               </label>
-              <select 
+              <select
                 name="role"
                 value={formData.role}
                 onChange={handleChange}
-                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all appearance-none cursor-pointer">
-                <option value="junior">Junior</option>
-                <option value="mentor">Mentor</option>
+                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all appearance-none cursor-pointer"
+              >
+                <option value="Junior">Junior</option>
+                <option value="Mentor">Mentor</option>
               </select>
             </div>
 
-            {/* Input Parola */}
             <div>
               <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-4 mb-2 block">
                 Password
@@ -232,10 +158,9 @@ const handleSubmit = async (e) => {
                 value={formData.password}
                 onChange={handleChange}
                 className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all"
-                placeholder="Minim 8 characters"
-                required
+                placeholder="Minim 8 caractere"
               />
-              {errors.password && <span className="text-red-500 text-xs ml-4">{errors.password}</span>}
+              {errors.password && <p className="text-red-500 text-xs mt-1 ml-4">{errors.password}</p>}
             </div>
 
             <div>
@@ -248,14 +173,11 @@ const handleSubmit = async (e) => {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all"
-                placeholder="Re-type password"
+                placeholder="••••••••"
               />
-              {errors.confirmPassword && (
-                <p className="text-red-500 text-[10px] mt-1 ml-4">{errors.confirmPassword}</p>
-              )}
+              {errors.confirmPassword && <p className="text-red-500 text-xs mt-1 ml-4">{errors.confirmPassword}</p>}
             </div>
 
-            {/* Register Button */}
             <button
               type="submit"
               disabled={isLoading}
@@ -275,7 +197,6 @@ const handleSubmit = async (e) => {
           </div>
         </div>
 
-        {/* Footer */}
         <p className="text-center mt-10 text-sm text-gray-300 italic font-medium">
           "Small steps lead to big bridges."
         </p>
