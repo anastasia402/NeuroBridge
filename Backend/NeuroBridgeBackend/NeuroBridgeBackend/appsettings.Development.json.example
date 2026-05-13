@@ -6,6 +6,9 @@
     }
   },
   "Gemini": {
-    "ApiKey": "AIzaSyAksWQ8saPhcKTwF4_94S4wJgr7agOX7IE"
+    "ApiKey": "PUNE_CHEIA_GEMINI_AICI"
+  },
+  "Jwt": {
+    "Key": "PUNE_UN_SECRET_DE_MINIM_32_CARACTERE_AICI"
   }
 }

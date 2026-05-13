@@ -22,5 +22,6 @@ namespace NeuroBridgeBackend.Entities
         public int ExperiencePoints { get; internal set; }
         public int Level { get; internal set; }
         public int CurrentStreak { get; set; }
+        public bool IsActive { get; set; } = true;
     }
 }
