@@ -9,7 +9,7 @@ const Register = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'user',
+    role: 'junior',
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
@@ -72,55 +72,66 @@ const Register = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!validateForm()) {
+  if (!validateForm()) return;
+
+  setIsLoading(true);
+  try {
+    const payload = {
+      email: formData.email,
+      password: formData.password,
+      fullName: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
+      role: formData.role
+    };
+
+    const response = await fetch('http://localhost:5294/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      let errorMessage = 'Eroare la înregistrare.';
+
+      if (data.errors) {
+        const allErrors = Object.values(data.errors).flat();
+        errorMessage = allErrors[0];
+      } else if (data.message) {
+        errorMessage = data.message;
+      }
+
+      setErrors({ server: errorMessage });
       return;
     }
 
-    setIsLoading(true);
-    setErrors({});
+    if (data.token) {
+            localStorage.setItem('token', data.token);
+            
+            // decodare rol
+            const base64Url = data.token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const payload = JSON.parse(window.atob(base64));
+            const role = payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || payload.role;
+            
+            localStorage.setItem('role', role);
 
-    try {
-      const { confirmPassword, ...registerData } = formData;
-      
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(registerData),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (data.errors) {
-          setErrors(data.errors);
+            // redirect la dashboard (daca este token)
+            const dashboard = role.toLowerCase() === 'junior' ? '/dashboard' : '/mentor/dashboard';
+            navigate(dashboard);
         } else {
-          setErrors({
-            server: data.message || 'Eroare la înregistrare.',
-          });
+            navigate('/login');
         }
-        return;
-      }
 
-      // salvare JWT in localStorage
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('role', data.role);
-
-      // redirectionare in functie de rol
-      const dashboard = data.role === 'junior' ? '/junior-dashboard' : '/mentor-dashboard';
-      navigate(dashboard);
-    } catch (error) {
-      setErrors({
-        server: 'Eroare de conexiune. Încearcă din nou.',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  } catch (error) {
+    setErrors({ server: 'Eroare de conexiune.' });
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center px-6 py-12">
@@ -133,25 +144,49 @@ const Register = () => {
           </div>
         </div>
 
-        {/* Cardul principal cu colțuri rotunjite [3rem] */}
         <div className="bg-white border border-gray-100 p-10 rounded-[3rem] shadow-sm">
           <div className="mb-8 text-center">
             <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Join the Bridge</h1>
             <p className="text-gray-500 mt-2 font-medium italic text-sm">Start building your neural pathways today.</p>
           </div>
 
+          {errors.server && (
+          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-2xl text-sm mb-6 font-medium text-center">
+          {errors.server}
+          </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Input Nume */}
+            {/* Input Prenume */}
             <div>
               <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-4 mb-2 block">
-                Full Name
+                First Name
               </label>
               <input
                 type="text"
+                name="firstName"
+                value={formData.firstName}
+                onChange={handleChange}
                 className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all"
-                placeholder="Alex Johnson"
-                required
+                placeholder="Alex"
               />
+              {errors.firstName && <p className="text-red-500 text-[10px] mt-1 ml-4">{errors.firstName}</p>}
+            </div>
+
+            {/* Input Nume de familie */}
+            <div>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-4 mb-2 block">
+                Last Name
+              </label>
+              <input
+                type="text"
+                name="lastName"
+                value={formData.lastName}
+                onChange={handleChange}
+                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all"
+                placeholder="Johnson"
+              />
+              {errors.lastName && <p className="text-red-500 text-[10px] mt-1 ml-4">{errors.lastName}</p>}
             </div>
 
             {/* Input Email */}
@@ -161,18 +196,26 @@ const Register = () => {
               </label>
               <input
                 type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
                 className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all"
                 placeholder="alex@example.com"
                 required
               />
+              {errors.email && <span className="text-red-500 text-xs ml-4">{errors.email}</span>}
             </div>
 
-            {/* Select Rol */}
+            {/* Selectare Rol */}
             <div>
               <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-4 mb-2 block">
                 I am a...
               </label>
-              <select className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all appearance-none cursor-pointer">
+              <select 
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all appearance-none cursor-pointer">
                 <option value="junior">Junior</option>
                 <option value="mentor">Mentor</option>
               </select>
@@ -185,13 +228,34 @@ const Register = () => {
               </label>
               <input
                 type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
                 className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all"
                 placeholder="Minim 8 characters"
                 required
               />
+              {errors.password && <span className="text-red-500 text-xs ml-4">{errors.password}</span>}
             </div>
 
-            {/* Butonul de Register (am folosit albastru pentru diferențiere, dar cu același stil) */}
+            <div>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-4 mb-2 block">
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all"
+                placeholder="Re-type password"
+              />
+              {errors.confirmPassword && (
+                <p className="text-red-500 text-[10px] mt-1 ml-4">{errors.confirmPassword}</p>
+              )}
+            </div>
+
+            {/* Register Button */}
             <button
               type="submit"
               disabled={isLoading}
@@ -211,7 +275,7 @@ const Register = () => {
           </div>
         </div>
 
-        {/* Footer Text (identic cu cel de la Dashboard/Login) */}
+        {/* Footer */}
         <p className="text-center mt-10 text-sm text-gray-300 italic font-medium">
           "Small steps lead to big bridges."
         </p>
