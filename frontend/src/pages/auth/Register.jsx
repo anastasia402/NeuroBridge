@@ -40,8 +40,16 @@ const Register = () => {
     e.preventDefault();
     if (!validate()) return;
 
-    setIsLoading(true);
-    setErrors({});
+    if (data.token) {
+            localStorage.setItem('token', data.token);
+            
+            // decodare rol
+            const base64Url = data.token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const payload = JSON.parse(window.atob(base64));
+            const role = payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || payload.role;
+            
+            localStorage.setItem('role', role);
 
     try {
       const { confirmPassword, ...payload } = formData;
@@ -70,7 +78,8 @@ const Register = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center px-6 py-12">
@@ -96,7 +105,7 @@ const Register = () => {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-4 mb-2 block">
-                Full Name
+                First Name
               </label>
               <input
                 type="text"
