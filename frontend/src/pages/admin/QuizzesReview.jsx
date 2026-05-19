@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageWrapper from '../../components/layout/PageWrapper';
 import QuizReviewPanel from '../../features/admin/QuizReviewPanel';
@@ -73,7 +73,7 @@ export default function QuizzesReview() {
   const activeQuiz = quizzes.find(q => q.id === activeQuizId);
 
   return (
-    <PageWrapper role="ADMIN" userName="Admin Manager" activePath="/admin/quizzes">
+    <PageWrapper>
       <div className="max-w-6xl mx-auto space-y-6">
 
         {/* Header */}

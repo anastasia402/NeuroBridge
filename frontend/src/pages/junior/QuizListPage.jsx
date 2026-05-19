@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import PageWrapper from '../../components/layout/PageWrapper';
 import QuizEngine from '../../features/quizzes/QuizEngine';
 import { apiGet } from '../../services/authService';
@@ -12,7 +12,7 @@ export default function QuizListPage() {
   const [activeQuizId, setActiveQuizId] = useState(null);
 
   useEffect(() => {
-    apiGet('/api/quizzes?status=ACTIVE')
+    apiGet('/quizzes?status=ACTIVE')
       .then(data => setQuizzes(Array.isArray(data) ? data : []))
       .catch(() => setQuizzes([]))
       .finally(() => setLoading(false));
@@ -31,7 +31,7 @@ export default function QuizListPage() {
   };
 
   return (
-    <PageWrapper role="JUNIOR">
+    <PageWrapper>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Quizzes</h1>
@@ -67,7 +67,7 @@ export default function QuizListPage() {
               <div key={q.id} className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-gray-900 text-sm truncate">{q.title}</div>
+                    <div className="font-semibold text-gray-900 text-sm truncate">{q.materialTitle || `Quiz #${q.id}`}</div>
                     {q.description && (
                       <div className="text-xs text-gray-500 mt-0.5 line-clamp-2">{q.description}</div>
                     )}

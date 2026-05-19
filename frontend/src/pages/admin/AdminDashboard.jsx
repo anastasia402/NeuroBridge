@@ -8,7 +8,7 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
 
   return (
-    <PageWrapper role="ADMIN" userName="Admin Manager" activePath="/admin/dashboard">
+    <PageWrapper>
       <div className="max-w-6xl mx-auto space-y-8">
 
         {/* Header */}

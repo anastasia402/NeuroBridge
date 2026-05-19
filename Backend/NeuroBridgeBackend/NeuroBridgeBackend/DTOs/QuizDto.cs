@@ -12,6 +12,11 @@ namespace NeuroBridgeBackend.DTOs
         public double AvgScore { get; set; }
     }
 
+    public class SubmitQuizRequest
+    {
+        public List<int> Answers { get; set; } = new();
+    }
+
     public class QuestionDto
     {
         public int Id { get; set; }

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import PageWrapper from '../../components/layout/PageWrapper';
 import { apiPost, apiUpload } from '../../services/authService';
+import { getUserId } from '../../utils/authUtils';
 
 const STEPS = ['Material', 'Configure', 'Generate'];
 
@@ -20,15 +21,19 @@ export default function GenerateQuizPage() {
     setLoading(true);
     try {
       let id;
+      const uploaderId = getUserId();
       if (inputMode === 'file' && file) {
         const fd = new FormData();
         fd.append('file', file);
-        const data = await apiUpload('/api/materials/upload', fd);
+        fd.append('title', config.topic || file.name.replace(/\.[^.]+$/, ''));
+        fd.append('uploaderId', uploaderId);
+        const data = await apiUpload('/materials', fd);
         id = data.id;
       } else {
-        const data = await apiPost('/api/materials/from-text', {
+        const data = await apiPost('/materials/from-text', {
           title: config.topic || 'AI Generated Material',
           content: contentText,
+          uploaderId,
         });
         id = data.id;
       }
@@ -44,11 +49,10 @@ export default function GenerateQuizPage() {
     setError('');
     setLoading(true);
     try {
-      const data = await apiPost('/api/quizzes/generate', {
+      const data = await apiPost('/ai/generate-quiz', {
         materialId,
         numberOfQuestions: config.numberOfQuestions,
         difficulty: config.difficulty,
-        topic: config.topic || undefined,
         contentText: inputMode === 'text' ? contentText : undefined,
       });
       setResult(data);
@@ -70,7 +74,7 @@ export default function GenerateQuizPage() {
   };
 
   return (
-    <PageWrapper role="ADMIN">
+    <PageWrapper>
       <div className="space-y-6 max-w-2xl mx-auto">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Generate Quiz</h1>
@@ -226,11 +230,11 @@ export default function GenerateQuizPage() {
             <div className="space-y-2">
               {(result.questions || []).map((q, i) => (
                 <div key={i} className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm">
-                  <div className="text-sm font-semibold text-gray-900 mb-1">{i + 1}. {q.questionText}</div>
+                  <div className="text-sm font-semibold text-gray-900 mb-1">{i + 1}. {q.text}</div>
                   <div className="space-y-1">
-                    {[q.optionA, q.optionB, q.optionC, q.optionD].map((opt, j) => (
+                    {(q.options || []).map((opt, j) => (
                       <div key={j} className={`text-xs px-3 py-1 rounded-lg ${
-                        ['A','B','C','D'][j] === q.correctAnswer ? 'bg-green-100 text-green-700 font-semibold' : 'text-gray-500'
+                        j === q.correctIndex ? 'bg-green-100 text-green-700 font-semibold' : 'text-gray-500'
                       }`}>
                         {['A','B','C','D'][j]}. {opt}
                       </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import PageWrapper from '../../components/layout/PageWrapper';
 import { apiGet, apiPut } from '../../services/authService';
 
@@ -61,7 +61,7 @@ export default function OrgSettingsPage() {
   };
 
   return (
-    <PageWrapper role="ADMIN">
+    <PageWrapper>
       <div className="space-y-6 max-w-xl mx-auto">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Org Settings</h1>

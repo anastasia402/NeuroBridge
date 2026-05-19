@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { apiGet } from '../../services/authService';
+import { apiGet, apiPost } from '../../services/authService';
 
 const LETTERS = ['A', 'B', 'C', 'D'];
 
@@ -51,10 +51,13 @@ export default function QuizEngine({ onClose, quizId = null }) {
     setRevealed(true);
   }
 
-  function handleNext() {
+  async function handleNext() {
     const newAnswers = [...answers, selected];
     if (current + 1 >= quiz.questions.length) {
       setAnswers(newAnswers);
+      try {
+        await apiPost(`/quizzes/${quiz.id}/submit`, { answers: newAnswers });
+      } catch {}
       setPhase('result');
     } else {
       setAnswers(newAnswers);

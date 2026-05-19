@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import PageWrapper from '../../components/layout/PageWrapper';
 import QuizEngine from '../../features/quizzes/QuizEngine';
@@ -38,7 +38,7 @@ export default function MaterialView() {
 
   return (
     <>
-      <PageWrapper role="JUNIOR" userName="Alex" activePath="/study">
+      <PageWrapper>
         <div className="max-w-md mx-auto pb-8">
 
           {/* Back */}

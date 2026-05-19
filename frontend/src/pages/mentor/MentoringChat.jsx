@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import PageWrapper from '../../components/layout/PageWrapper';
 import Button from '../../components/common/Button';
@@ -35,7 +35,7 @@ export default function MentoringChat({ role = "JUNIOR" }) {
 
   if (sessionState === 'CLOSED' && !isMentor) {
     return (
-      <PageWrapper role={role} activePath={`/mentoring/${uuid}`}>
+      <PageWrapper>
         <SessionRating />
       </PageWrapper>
     );
@@ -47,7 +47,7 @@ export default function MentoringChat({ role = "JUNIOR" }) {
   };
 
   return (
-    <PageWrapper role={role} activePath={`/mentoring/${uuid}`}>
+    <PageWrapper>
       <div className="flex flex-col md:flex-row max-w-5xl mx-auto h-[calc(100vh-100px)] relative gap-6 pb-20 md:pb-0">
         
         {isMentor && (

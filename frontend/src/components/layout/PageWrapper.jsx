@@ -2,9 +2,15 @@ import React from 'react';
 import Topbar from './Topbar';
 import BottomNav from './BottomNav';
 import AdminBottomNav from './AdminBottomNav';
+import MentorBottomNav from './MentorBottomNav';
 
-export default function PageWrapper({ children, role = 'JUNIOR', userName = 'Alex' }) {
-  const isAdmin = role === 'ADMIN';
+export default function PageWrapper({ children }) {
+  const role = (localStorage.getItem('role') || 'JUNIOR').toUpperCase();
+  const userName = localStorage.getItem('fullName') || 'User';
+  const isAdmin  = role === 'ADMIN';
+  const isMentor = role === 'MENTOR';
+
+  const Nav = isAdmin ? AdminBottomNav : isMentor ? MentorBottomNav : BottomNav;
 
   return (
     <div className="flex min-h-screen bg-white">
@@ -17,7 +23,7 @@ export default function PageWrapper({ children, role = 'JUNIOR', userName = 'Ale
           </div>
         </main>
 
-        {isAdmin ? <AdminBottomNav /> : <BottomNav />}
+        <Nav />
       </div>
     </div>
   );

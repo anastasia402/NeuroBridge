@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageWrapper from '../../components/layout/PageWrapper';
 import QuizEngine from '../../features/quizzes/QuizEngine';
@@ -93,7 +93,7 @@ export default function StudyLibrary() {
 
   return (
     <>
-      <PageWrapper role="JUNIOR" userName="Alex" activePath="/study">
+      <PageWrapper>
         <div className="max-w-md mx-auto pb-24">
           <h1 className="text-3xl font-bold text-gray-900 mb-6 tracking-tight">Study Library</h1>
 

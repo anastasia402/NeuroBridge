@@ -26,6 +26,11 @@ namespace NeuroBridgeBackend.DTOs
         public string Role { get; set; } = "Junior"; // Junior | Mentor
     }
 
+    public class UpdateMeRequest
+    {
+        public string? FullName { get; set; }
+    }
+
     public class AuthResponse
     {
         public string Token { get; set; } = null!;

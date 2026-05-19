@@ -20,3 +20,8 @@ export const setAuthData = (token, role) => {
   localStorage.setItem('token', token);
   localStorage.setItem('role', role);
 };
+
+export const getUserId = () => {
+  const id = localStorage.getItem('userId');
+  return id ? parseInt(id, 10) : null;
+};
