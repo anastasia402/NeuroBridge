@@ -61,6 +61,17 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = jwtIssuer,
         IssuerSigningKey = new SymmetricSecurityKey(key)
     };
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/chatHub"))
+                context.Token = accessToken;
+            return Task.CompletedTask;
+        }
+    };
 });
 
 builder.Services.AddCors(options =>
@@ -68,9 +79,10 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowReactApp",
         policy =>
         {
-            policy.WithOrigins("http://localhost:5173", "http://localhost:3000") 
+            policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
                   .AllowAnyHeader()
-                  .AllowAnyMethod();
+                  .AllowAnyMethod()
+                  .AllowCredentials();
         });
 });
 
@@ -163,6 +175,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 // Map SignalR hub
-app.MapHub<NeuroBridgeBackend.Hubs.ChatHub>("/chatHub");
+app.MapHub<NeuroBridgeBackend.Hubs.ChatHub>("/chatHub")
+   .RequireCors("AllowReactApp");
 
 app.Run();

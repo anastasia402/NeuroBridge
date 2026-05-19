@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NeuroBridgeBackend.Context;
 using NeuroBridgeBackend.DTOs;
 using NeuroBridgeBackend.Entities;
 using NeuroBridgeBackend.Services.Interfaces;
+using System.Security.Claims;
 
 namespace NeuroBridgeBackend.Controllers
 {
@@ -122,6 +124,77 @@ namespace NeuroBridgeBackend.Controllers
             {
                 return BadRequest(ex.Message);
             }
+        }
+
+        /// <summary>
+        /// Submit quiz answers and save result for the current user.
+        /// </summary>
+        [HttpPost("{id}/submit")]
+        [Authorize]
+        public async Task<IActionResult> Submit(int id, [FromBody] SubmitQuizRequest request)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out var userId))
+                return Unauthorized();
+
+            var quiz = await _quizService.GetWithQuestionsAsync(id);
+            if (quiz == null) return NotFound();
+
+            var score = 0;
+            for (var i = 0; i < quiz.Questions.Count && i < request.Answers.Count; i++)
+            {
+                if (request.Answers[i] == quiz.Questions.ElementAt(i).CorrectIndex)
+                    score++;
+            }
+
+            var result = new QuizResult
+            {
+                JuniorId = userId,
+                QuizId = id,
+                Score = score,
+                TotalQuestions = quiz.Questions.Count,
+                UserAnswers = System.Text.Json.JsonSerializer.Serialize(request.Answers),
+                CompletedAt = DateTime.UtcNow
+            };
+
+            _context.QuizResults.Add(result);
+            await _context.SaveChangesAsync();
+
+            var pct = quiz.Questions.Count > 0
+                ? (int)Math.Round((double)score / quiz.Questions.Count * 100)
+                : 0;
+
+            return Ok(new { score, totalQuestions = quiz.Questions.Count, percentage = pct });
+        }
+
+        /// <summary>
+        /// Get quiz results for the currently logged-in user.
+        /// </summary>
+        [HttpGet("my-results")]
+        [Authorize]
+        public async Task<IActionResult> GetMyResults()
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out var userId))
+                return Unauthorized();
+
+            var results = await _context.QuizResults
+                .Where(r => r.JuniorId == userId)
+                .Include(r => r.Quiz).ThenInclude(q => q.Material)
+                .OrderByDescending(r => r.CompletedAt)
+                .Select(r => new
+                {
+                    id = r.Id,
+                    quizId = r.QuizId,
+                    materialTitle = r.Quiz.Material != null ? r.Quiz.Material.Title : $"Quiz #{r.QuizId}",
+                    score = r.Score,
+                    totalQuestions = r.TotalQuestions,
+                    percentage = r.TotalQuestions > 0 ? (int)Math.Round((double)r.Score / r.TotalQuestions * 100) : 0,
+                    completedAt = r.CompletedAt
+                })
+                .ToListAsync();
+
+            return Ok(results);
         }
 
         private static QuizDto MapToDto(Quiz quiz) => new()

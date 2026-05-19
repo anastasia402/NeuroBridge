@@ -16,7 +16,6 @@ namespace NeuroBridgeBackend.Services
         private readonly ILogger<AIService> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
 
-        // Varianta cea mai stabilă pentru v1beta
         private const string GeminiApiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 
         public AIService(

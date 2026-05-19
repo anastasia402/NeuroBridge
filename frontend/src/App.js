@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { OrgSettingsContext } from './context/OrgSettingsContext';
 import { useOrgSettings } from './hooks/useOrgSettings';
@@ -22,27 +22,12 @@ import QuizListPage from './pages/junior/QuizListPage';
 import MentorSessions from './pages/mentor/MentorSessions';
 import OrgSettingsPage from './pages/admin/OrgSettingsPage';
 
-import ChatSession from './features/mentoring/ChatSession';
-
 export default function App() {
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [chatRole, setChatRole] = useState("JUNIOR");
   const orgSettings = useOrgSettings();
-
-  const handleOpenChat = (role) => {
-    setChatRole(role);
-    setIsChatOpen(true);
-  };
 
   return (
     <OrgSettingsContext.Provider value={orgSettings}>
     <Router>
-      
-      <ChatSession 
-        isOpen={isChatOpen} 
-        onClose={() => setIsChatOpen(false)} 
-        role={chatRole} 
-      />
 
       <Routes>
         {/* Default Redirect */}
@@ -54,12 +39,12 @@ export default function App() {
 
         {/* --- JUNIOR ROUTES --- */}
         {/* Pass the handleOpenChat function so buttons inside these pages work */}
-        <Route path="/dashboard" element={<JuniorDashboard openChat={() => handleOpenChat("JUNIOR")} />} />
+        <Route path="/dashboard" element={<JuniorDashboard />} />
         <Route path="/study" element={<StudyLibrary />} />
         <Route path="/study/:id" element={<MaterialView />} />
         
         {/* This is what connects the "Chat Now" buttons in your MentorsList! */}
-        <Route path="/mentors" element={<MentorsList openChat={() => handleOpenChat("JUNIOR")} />} />
+        <Route path="/mentors" element={<MentorsList />} />
         
         <Route path="/quizzes" element={<QuizListPage />} />
         <Route path="/stats" element={<Stats />} />
@@ -67,7 +52,7 @@ export default function App() {
 
         {/* --- MENTOR ROUTES --- */}
         {/* Mentors can also trigger the chat when they accept a session */}
-        <Route path="/mentor/sessions" element={<MentorSessions openChat={() => handleOpenChat("MENTOR")} />} />
+        <Route path="/mentor/sessions" element={<MentorSessions />} />
         
         {/* --- ADMIN ROUTES --- */}
         <Route path="/admin/dashboard" element={<AdminDashboard />} />

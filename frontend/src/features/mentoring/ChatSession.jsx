@@ -1,99 +1,174 @@
 import React, { useState, useRef, useEffect } from 'react';
-import JuniorSnapshot from './JuniorSnapshot'; 
+import * as signalR from '@microsoft/signalr';
+import { getToken, getUserId } from '../../utils/authUtils';
 
-export default function ChatSession({ isOpen, onClose, role = "JUNIOR" }) {
-  const [messages, setMessages] = useState([
-    { id: 1, text: "I'm stuck on how synaptic pruning relates to the quiz.", sender: "JUNIOR", time: "10:30" },
-    { id: 2, text: "Let's look at your recent score and bridge that gap.", sender: "MENTOR", time: "10:31" },
-  ]);
-  const [inputValue, setInputValue] = useState("");
+const HUB_URL = 'http://localhost:5294/chatHub';
+
+export default function ChatSession({ session, onClose, onComplete }) {
+  const [messages, setMessages]   = useState([]);
+  const [input, setInput]         = useState('');
+  const [connected, setConnected] = useState(false);
+  const [error, setError]         = useState(null);
+  const hubRef  = useRef(null);
   const scrollRef = useRef(null);
-  const isMentor = role === "MENTOR";
+  const userId  = parseInt(getUserId(), 10);
+  const isMentor = session?.mentorId === userId;
 
   useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (!session) return;
+
+    let cancelled = false;
+
+    const hub = new signalR.HubConnectionBuilder()
+      .withUrl(HUB_URL, {
+        accessTokenFactory: () => getToken(),
+        transport: signalR.HttpTransportType.WebSockets,
+        skipNegotiation: true,
+      })
+      .withAutomaticReconnect()
+      .build();
+
+    hub.on('LoadMessages', (msgs) => { if (!cancelled) setMessages(Array.isArray(msgs) ? msgs : []); });
+    hub.on('ReceiveMessage', (msg) => { if (!cancelled) setMessages(prev => [...prev, msg]); });
+    hub.on('Error', (err) => { if (!cancelled) setError(err); });
+    hub.onclose(() => { if (!cancelled) setConnected(false); });
+
+    hub.start()
+      .then(() => {
+        if (cancelled) return;
+        setConnected(true);
+        setError(null);
+        hub.invoke('JoinSession', { sessionId: session.id, userId });
+      })
+      .catch((err) => {
+        if (!cancelled && !err?.message?.includes('stop()')) {
+          setError('Could not connect to chat');
+        }
+      });
+
+    hubRef.current = hub;
+
+    return () => {
+      cancelled = true;
+      hub.stop().catch(() => {});
+    };
+  }, [session?.id]);
+
+  useEffect(() => {
+    scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  if (!isOpen) return null;
+  if (!session) return null;
 
-  const handleSendMessage = () => {
-    if (!inputValue.trim()) return;
-    setMessages([...messages, {
-      id: Date.now(),
-      text: inputValue,
-      sender: role,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    }]);
-    setInputValue("");
-  };
+  function getSenderName(senderId) {
+    if (senderId === session.juniorId) return session.juniorName || 'Junior';
+    if (senderId === session.mentorId) return session.mentorName || 'Mentor';
+    return 'User';
+  }
+
+  function handleSend() {
+    if (!input.trim() || !connected) return;
+    hubRef.current?.invoke('SendMessage', { message: input.trim(), messageType: 0 });
+    setInput('');
+  }
+
+  function formatTime(dateStr) {
+    return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4">
-      
-      <div className="bg-white w-full max-w-3xl h-[90vh] sm:h-[80vh] sm:rounded-[2.5rem] rounded-t-[2.5rem] flex flex-col overflow-hidden shadow-2xl animate-in slide-in-from-bottom-8 duration-300">
-        
-        <div className="flex justify-between items-center p-6 border-b border-gray-50 bg-white">
+    <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white w-full max-w-lg h-[600px] max-h-[90vh] rounded-[2rem] shadow-2xl flex flex-col overflow-hidden">
+
+        {/* Header */}
+        <div className="flex justify-between items-center px-5 py-4 border-b border-gray-100">
           <div>
-            <h2 className="font-bold text-gray-900 text-lg">
-              {isMentor ? "Mentoring Alex" : "Flash Mentoring"}
-            </h2>
-            <div className="flex items-center text-[10px] font-bold text-green-500 uppercase">
-              <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-2 animate-pulse"></span>
-              Connected
+            <h2 className="font-bold text-gray-900 text-sm">{session?.topic || 'Chat'}</h2>
+            <div className="flex items-center text-[10px] font-bold uppercase mt-0.5">
+              {connected
+                ? <><span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 animate-pulse" /><span className="text-green-500">Connected</span></>
+                : <><span className="w-1.5 h-1.5 bg-gray-300 rounded-full mr-1.5" /><span className="text-gray-400">Connecting...</span></>
+              }
             </div>
           </div>
-          <button 
-            onClick={onClose}
-            className="bg-gray-100 text-gray-400 w-10 h-10 rounded-full hover:bg-gray-200 hover:text-gray-900 transition-colors flex items-center justify-center font-bold"
-          >
-            ✕
-          </button>
+          <div className="flex items-center gap-2">
+            {isMentor && onComplete && (
+              <button onClick={onComplete} className="text-xs font-bold bg-green-100 text-green-700 px-3 py-1.5 rounded-xl hover:bg-green-200 transition-colors">
+                Complete
+              </button>
+            )}
+            <button onClick={onClose} className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-200 font-bold text-sm">
+              ✕
+            </button>
+          </div>
         </div>
 
-        <div className="flex-1 flex overflow-hidden">
-          
-          {isMentor && (
-            <div className="hidden sm:block w-80 bg-gray-50 border-r border-gray-100 p-6 overflow-y-auto">
-              <JuniorSnapshot />
+        {error && (
+          <div className="bg-red-50 text-red-600 text-xs font-medium px-5 py-1.5 border-b border-red-100">{error}</div>
+        )}
+
+        {/* With who */}
+        <div className="px-5 py-1.5 bg-gray-50 border-b border-gray-100">
+          <span className="text-[10px] text-gray-400 font-medium">
+            {isMentor ? `With: ${session?.juniorName}` : `With: ${session?.mentorName || 'Waiting for mentor...'}`}
+          </span>
+        </div>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {messages.length === 0 && (
+            <div className="text-center text-gray-400 text-sm mt-10">
+              <div className="text-3xl mb-2">💬</div>
+              <p className="font-medium text-xs">No messages yet. Say hello!</p>
             </div>
           )}
-
-          <div className="flex-1 flex flex-col bg-white">
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              {messages.map((msg) => (
-                <div key={msg.id} className={`flex ${msg.sender === role ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] p-4 rounded-[1.8rem] shadow-sm ${
-                    msg.sender === role ? 'bg-blue-500 text-white rounded-tr-none' : 'bg-gray-100 text-gray-800 rounded-tl-none'
-                  }`}>
-                    <p className="text-sm font-medium leading-relaxed">{msg.text}</p>
-                    <span className="text-[9px] block mt-2 opacity-60 font-bold">{msg.time}</span>
+          {messages.map((msg, i) => {
+            const isMe = msg.senderId === userId;
+            const name = getSenderName(msg.senderId);
+            return (
+              <div key={msg.id || i} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                {!isMe && (
+                  <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-600 mr-2 shrink-0 mt-1">
+                    {name.charAt(0)}
                   </div>
+                )}
+                <div className={`max-w-[75%] px-3 py-2.5 rounded-2xl text-sm shadow-sm ${
+                  isMe ? 'bg-blue-500 text-white rounded-tr-none' : 'bg-gray-100 text-gray-800 rounded-tl-none'
+                }`}>
+                  {!isMe && <p className="text-[10px] font-bold mb-1 opacity-70">{name}</p>}
+                  <p className="leading-relaxed text-sm">{msg.message}</p>
+                  <p className={`text-[9px] mt-1 font-bold opacity-50 ${isMe ? 'text-right' : ''}`}>
+                    {msg.sentAt ? formatTime(msg.sentAt) : ''}
+                  </p>
                 </div>
-              ))}
-              <div ref={scrollRef} />
-            </div>
-
-            <div className="p-4 bg-white border-t border-gray-50">
-              <div className="flex items-center space-x-3 bg-gray-50 rounded-[1.5rem] p-2 border border-gray-200">
-                <input 
-                  type="text"
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                  placeholder="Type your message..."
-                  className="flex-1 bg-transparent border-none focus:ring-0 text-sm px-4"
-                />
-                <button 
-                  onClick={handleSendMessage}
-                  className="bg-blue-500 text-white w-10 h-10 rounded-xl flex items-center justify-center shadow-md active:scale-95 transition-all"
-                >
-                  ➔
-                </button>
               </div>
-            </div>
-          </div>
-
+            );
+          })}
+          <div ref={scrollRef} />
         </div>
+
+        {/* Input */}
+        <div className="px-4 py-3 border-t border-gray-100">
+          <div className="flex items-center space-x-2 bg-gray-50 rounded-2xl px-3 py-2 border border-gray-200 focus-within:border-blue-300 focus-within:bg-white transition-all">
+            <input
+              type="text"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSend()}
+              placeholder="Type a message..."
+              className="flex-1 bg-transparent border-none focus:ring-0 text-sm"
+              disabled={!connected}
+            />
+            <button
+              onClick={handleSend}
+              disabled={!input.trim() || !connected}
+              className="w-8 h-8 bg-blue-500 text-white rounded-xl flex items-center justify-center disabled:opacity-40 hover:bg-blue-600 transition-colors shrink-0"
+            >
+              ➔
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   );

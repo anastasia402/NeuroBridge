@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import PageWrapper from '../../components/layout/PageWrapper';
 import { apiGet, apiPost, apiPut, apiDelete } from '../../services/authService';
 
@@ -71,7 +71,7 @@ export default function AdminUsersPage() {
   const totalPages = Math.ceil(total / pageSize);
 
   return (
-    <PageWrapper role="ADMIN">
+    <PageWrapper>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
